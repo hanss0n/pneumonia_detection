@@ -7,10 +7,10 @@ fashion_mnist = keras.datasets.fashion_mnist
 
 (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()  # REPLACE WITH COVID SHIT
 
-class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat',
+class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', # Replace with covid, notcovid
                'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
 
-# preprocess data
+# preprocess data 
 plt.figure()
 plt.imshow(train_images[0])
 plt.colorbar()
@@ -41,7 +41,7 @@ model.compile(optimizer='adam',
               loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-model.fit(train_images, train_labels, epochs=1)
+model.fit(train_images, train_labels, epochs=5)
 
 test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
 
