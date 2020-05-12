@@ -13,8 +13,8 @@ import re
 def load_tutorial_data():
     fashion_mnist = keras.datasets.fashion_mnist
     (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()  # REPLACE WITH COVID SHIT
-    class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', # Replace with covid, notcovid
-               'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
+    class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat',  # Replace with covid, notcovid
+                   'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
     return train_images, train_labels, test_images, test_labels, class_names
 
 
@@ -33,7 +33,7 @@ def preprocess_data(train_images, train_labels, test_images, test_labels, class_
                   loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                   metrics=['accuracy'])
 
-    model.fit(train_images, train_labels, epochs=0) # TODO: Fix before commit
+    model.fit(train_images, train_labels, epochs=0)  # TODO: Fix before commit
 
     test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
 
@@ -52,18 +52,19 @@ def load_data():
     images_as_arrays = [np.array(img) for img in images]
 
     # TODO: Split these two into training + testing sets. For now it's a 50/50 split
-    half = int(len(data)/2)
+    half = int(len(data) / 2)
     train_images = images_as_arrays[:half]
     train_labels = labels[:half]
     test_images = images_as_arrays[half:]
     test_labels = labels[half:]
-    class_names = ["COVID-19", "NOT COVID-19"] # TODO: Improve naming
+    class_names = ["COVID-19", "NOT COVID-19"]  # TODO: Improve naming
 
     return train_images, train_labels, test_images, test_labels, class_names
 
 
 def load_images(paths):
-    images = [Image.open(os.path.join("res", "images", path)) if not re.match(".*\.gz", path) else None for path in paths]
+    images = [Image.open(os.path.join("res", "images", path)) if not re.match(".*\.gz", path) else None for path in
+              paths]
     # TODO:
     # Currently isn't looking at all 360 images since they are not stored in res/images and needs to be downloaded
     # These paths are stored as .gz files, and the above will filter them out, replacing them with None for now
