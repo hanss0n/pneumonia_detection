@@ -1,5 +1,8 @@
 import tensorflow as tf
 from tensorflow import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import numpy as np
 from numpy import asarray
 import matplotlib.pyplot as plt
@@ -9,6 +12,7 @@ import os
 from PIL import Image
 import re
 import shutil
+import sys
 
 
 def load_tutorial_data():
@@ -85,12 +89,26 @@ def load_data():
 
     return train_images, train_labels, test_images, test_labels, class_names
 
+def count_color_modes(images):
+    grey_scale, rgb, rgba, i = 0, 0, 0, 0
+    for img in images:
+        if img.mode == 'L':
+            grey_scale += 1
+        if img.mode == 'RGB':
+            rgb += 1
+        if img.mode == 'RGBA':
+            rgba += 1
+        i = i + 1
+
+    print('All: ', i)
+    print('Grayscale: ', grey_scale)
+    print('RGB: ', rgb)
+    print('RGBA: ', rgba)
+
 
 if __name__ == '__main__':
-    train_images, train_labels, test_images, test_labels, class_names = load_data()
-    img = train_images[0]
-    preprocess_data(train_images, train_labels, test_images, test_labels, class_names)
-
-
-
+    # train_images, train_labels, test_images, test_labels, class_names = load_data()
+    # print(sys.getsizeof(train_images))
+    # preprocess_data(train_images, train_labels, test_images, test_labels, class_names)
+    tutorial2()
 
