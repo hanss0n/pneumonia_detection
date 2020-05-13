@@ -8,6 +8,7 @@ import pandas as pd
 import os
 from PIL import Image
 import re
+import shutil
 
 
 def load_tutorial_data():
@@ -75,11 +76,47 @@ def load_images(paths):
 def load_labels(labels):
     # As we are only interested in Covid-19 right now, we will compress every non-finding of Covid-19 to the same label
     # Covid = 0, Not Covid = 1
-    trimmed_labels = [0 if re.match("COVID-19", label) else 1 for label in labels]
+    trimmed_labels = [0 if re.match('COVID-19', label) else 1 for label in labels]
     return trimmed_labels
 
 
+def extract_covid_chestxray_dataset():
+    working_dir = os.path.join('res', 'covid-chestxray-dataset')
+    # Where we will store our extracted images
+    covid_path = os.path.join(working_dir, 'covid_cases')
+
+    metadata_csv = pd.read_csv(os.path.join(working_dir, 'metadata.csv'),
+                               usecols=['patientid', 'finding', 'date', 'filename', 'view', 'folder'])
+    metadata_csv.insert(0, 'New_ID', range(0, len(metadata_csv)))  # Adds unique row identifier
+
+    # Extract only Covid cases, as well as counting skipped and covid cases
+    covid_cases, skipped = 0, 0
+    res = []
+    for (i, row) in metadata_csv.iterrows():
+        if re.match('images', row['folder']) and re.match('COVID-19', row['finding']):
+            # Copy the Covid images to the directory storing all the covid cases
+            orig_path = os.path.join(working_dir, 'images', row["filename"])
+            if not os.path.exists(covid_path):
+                shutil.copy2(orig_path, covid_path)
+
+            # Keep track of which images are saved
+            covid_cases += 1
+            res.append(row['New_ID'])
+        else:
+            skipped += 1
+
+    print('Covid cases: ', covid_cases)
+    print('Skipped cases: ', skipped)
+
+    # Save an updated version of the metadata corresponding to the Covid cases
+    metadata_csv.loc[metadata_csv['New_ID'].isin(res)].to_csv(os.path.join(working_dir, 'metadata_covid_cases.csv'))
+
+
 if __name__ == '__main__':
-    train_images, train_labels, test_images, test_labels, class_names = load_tutorial_data()
-    preprocess_data(train_images, train_labels, test_images, test_labels, class_names)+
+    # preprocess_data(train_images, train_labels, test_images, test_labels, class_names)
+    # train_images, train_labels, test_images, test_labels, class_names = load_data()
+    extract_covid_chestxray_dataset()
+    metadata_csv = pd.read_csv(os.path.join('res', 'covid-chestxray-dataset', 'metadata_covid_cases.csv'))
+    print(metadata_csv)
+
 
