@@ -6,10 +6,19 @@ import re
 
 def extract_covid_chestxray_dataset():
     # Extract only covid cases from the chestxray-dataset, and produce a corresponding metadata file
-
     working_dir = 'covid-chestxray-dataset'
     # Where we will store our extracted images
     covid_path = os.path.join(working_dir, 'covid_cases')
+    # If it hasn't already been created, do so
+    if not os.path.exists(covid_path):
+        try:
+            os.mkdir(covid_path)
+        except OSError:
+            print("Creation of the directory %s failed" % covid_path)
+        else:
+            print("Successfully created the directory %s " % covid_path)
+    else:
+        print("Directory %s already exists" % covid_path)
 
     metadata_csv = pd.read_csv(os.path.join(working_dir, 'metadata.csv'),
                                usecols=['patientid', 'finding', 'date', 'filename', 'view', 'folder'])
@@ -24,7 +33,7 @@ def extract_covid_chestxray_dataset():
             orig_path = os.path.join(working_dir, 'images', row["filename"])
 
             # If the script is run multiple times, this will counteract multiple copies of the same image
-            if not os.path.exists(covid_path):
+            if not os.path.exists(os.path.join(covid_path, row["filename"])):
                 shutil.copy2(orig_path, covid_path)
 
             # Keep track of which images are saved
