@@ -14,7 +14,7 @@ import shutil
 def load_tutorial_data():
     fashion_mnist = keras.datasets.fashion_mnist
     (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()  # REPLACE WITH COVID SHIT
-    class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat',  # Replace with covid, notcovid
+    class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat',  # Replace with covid_cases, notcovid
                    'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
     return train_images, train_labels, test_images, test_labels, class_names
 
@@ -45,48 +45,52 @@ def preprocess_data(train_images, train_labels, test_images, test_labels, class_
 
 
 def load_data():
-    data = pd.read_csv(os.path.join("res", 'metadata.csv'))
-    images = load_images(data.filename)
-    labels = load_labels(data.finding)
+    path_chestxray = os.path.join('res', 'covid-chestxray-dataset')
+    metadata_csv = pd.read_csv(os.path.join(path_chestxray, 'metadata.csv'),
+                               usecols=['patientid', 'finding', 'date', 'filename', 'view', 'folder'])
 
+    # Add unique row identifier
+    metadata_csv.insert(0, 'New_ID', range(0, len(metadata_csv)))
+
+    # Extract only images in the /images folder, as well as updating the metadata accordingly
+    covid_cases, skipped = 0, 0
+    usable_rows = []
+    for (i, row) in metadata_csv.iterrows():
+        if re.match('images', row['folder']):
+            covid_cases += 1
+            usable_rows.append(row['New_ID'])
+        else:
+            # There are 21 images in 'volume', we skip them for now
+            skipped += 1
+    # Update metadata
+    usable_metadata = metadata_csv.loc[metadata_csv['New_ID'].isin(usable_rows)]
+
+    # Store all the images we want to use
+    images = [Image.open(os.path.join(path_chestxray, 'images', path)) for path in usable_metadata.filename]
     # We also have to transform our images to numpy arrays
+    # This takes a year...
     images_as_arrays = [np.array(img) for img in images]
 
+    # Extract all the labels for the images we are using
+    # Covid = 0, Not Covid = 1
+    labels = [0 if re.match('COVID-19', label) else 1 for label in usable_metadata.finding]
+
     # TODO: Split these two into training + testing sets. For now it's a 50/50 split
-    half = int(len(data) / 2)
+    half = int(len(usable_metadata) / 2)
     train_images = images_as_arrays[:half]
     train_labels = labels[:half]
     test_images = images_as_arrays[half:]
     test_labels = labels[half:]
-    class_names = ["COVID-19", "NOT COVID-19"]  # TODO: Improve naming
+    class_names = ['COVID-19', 'NOT COVID-19']
 
     return train_images, train_labels, test_images, test_labels, class_names
 
 
-def load_images(paths):
-    images = [Image.open(os.path.join("res", "images", path)) if not re.match(".*\.gz", path) else None for path in
-              paths]
-    # TODO:
-    # Currently isn't looking at all 360 images since they are not stored in res/images and needs to be downloaded
-    # These paths are stored as .gz files, and the above will filter them out, replacing them with None for now
-
-    return images
-
-
-def load_labels(labels):
-    # As we are only interested in Covid-19 right now, we will compress every non-finding of Covid-19 to the same label
-    # Covid = 0, Not Covid = 1
-    trimmed_labels = [0 if re.match('COVID-19', label) else 1 for label in labels]
-    return trimmed_labels
-
-
-
-
 if __name__ == '__main__':
-    # preprocess_data(train_images, train_labels, test_images, test_labels, class_names)
-    # train_images, train_labels, test_images, test_labels, class_names = load_data()
-    extract_covid_chestxray_dataset()
-    metadata_csv = pd.read_csv(os.path.join('res', 'covid-chestxray-dataset', 'metadata_covid_cases.csv'))
-    print(metadata_csv)
+    train_images, train_labels, test_images, test_labels, class_names = load_data()
+    img = train_images[0]
+    preprocess_data(train_images, train_labels, test_images, test_labels, class_names)
+
+
 
 
