@@ -23,6 +23,25 @@ def setup_directory_structure():
     create_directory(os.path.join('validation', 'non_covid'))
 
 
+def summarize_final_datasets():
+    # Give an overview of the contents of the top level datasets
+    train_covid = len(os.listdir(os.path.join(train, 'covid')))
+    train_non_covid = len(os.listdir(os.path.join(train, 'non_covid')))
+    train_tot = train_covid + train_non_covid
+
+    validation_covid = len(os.listdir(os.path.join(validation, 'covid')))
+    validation_non_covid = len(os.listdir(os.path.join(validation, 'non_covid')))
+    validation_tot = validation_covid + validation_non_covid
+
+    print('Total number of images in training set: ', train_tot)
+    print('Covid cases: ', train_covid)
+    print('Non covid cases: ', train_non_covid)
+    print('-----------------------------------------------')
+    print('Total number of images in validation set: ', validation_tot)
+    print('Covid cases: ', validation_covid)
+    print('Non covid cases: ', validation_non_covid)
+
+
 def extract_covid_chestxray_dataset():
     # Extract images from the covid-chestxray-dataset and place them in folders /covid and /non-covid
     # Create corresponding metadata files as well
@@ -71,6 +90,7 @@ def extract_covid_chestxray_dataset():
     print('Covid cases: ', covid_cases)
     print('Non Covid cases: ', non_covid_cases)
     print('Skipped: ', skipped)
+    print('-----------------------------------------------')
 
     # Save an updated version of the metadata corresponding to the Covid cases
     metadata_csv.loc[metadata_csv['New_ID'].isin(covid)].to_csv(os.path.join(dataset_dir, 'metadata_covid_cases.csv'))
@@ -125,4 +145,4 @@ if __name__ == '__main__':
     setup_directory_structure()
     extract_covid_chestxray_dataset()
     partition_covid_chestxray()
-
+    summarize_final_datasets()
