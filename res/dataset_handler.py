@@ -23,6 +23,15 @@ def setup_directory_structure():
     create_directory(os.path.join('validation', 'non_covid'))
 
 
+def tear_down():
+    shutil.rmtree('train')
+    shutil.rmtree('validation')
+    shutil.rmtree(os.path.join('covid-chestxray-dataset', 'covid'))
+    shutil.rmtree(os.path.join('covid-chestxray-dataset', 'non_covid'))
+    os.remove(os.path.join('covid-chestxray-dataset', 'metadata_covid.csv'))
+    os.remove(os.path.join('covid-chestxray-dataset', 'metadata_non_covid.csv'))
+
+
 def summarize_final_datasets():
     # Give an overview of the contents of the top level datasets
     train_covid = len(os.listdir(os.path.join(train, 'covid')))
@@ -93,7 +102,7 @@ def extract_covid_chestxray_dataset():
     print('-----------------------------------------------')
 
     # Save an updated version of the metadata corresponding to the Covid cases
-    metadata_csv.loc[metadata_csv['New_ID'].isin(covid)].to_csv(os.path.join(dataset_dir, 'metadata_covid_cases.csv'))
+    metadata_csv.loc[metadata_csv['New_ID'].isin(covid)].to_csv(os.path.join(dataset_dir, 'metadata_covid.csv'))
     metadata_csv.loc[metadata_csv['New_ID'].isin(non_covid)].to_csv(os.path.join(dataset_dir, 'metadata_non_covid.csv'))
 
 
@@ -149,3 +158,5 @@ if __name__ == '__main__':
     extract_covid_chestxray_dataset()
     partition_covid_chestxray()
     summarize_final_datasets()
+    tear_down()
+
