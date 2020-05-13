@@ -154,9 +154,12 @@ def create_directory(path):
 
 
 if __name__ == '__main__':
-    setup_directory_structure()
-    extract_covid_chestxray_dataset()
-    partition_covid_chestxray()
-    summarize_final_datasets()
-    tear_down()
+    setup = False
+    if setup:
+        setup_directory_structure()
+        extract_covid_chestxray_dataset()
+        partition_covid_chestxray()
+        summarize_final_datasets()
+    else:
+        tear_down()
 
