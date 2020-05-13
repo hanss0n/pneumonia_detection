@@ -102,8 +102,11 @@ def partition_covid_chestxray():
     dataset_dir = 'covid-chestxray-dataset'
 
     # TODO: For now we will use a fifty fifty split
-    partition_images(0.5, dataset_dir, 'covid')
-    partition_images(0.5, dataset_dir, 'non_covid')
+    # TODO: Also, if you run this multiple times, you will have to manually remove the top level train and validation
+    #  directories, because images can be put in both train and validation otherwise
+    split = 0.5
+    partition_images(split, dataset_dir, 'covid')
+    partition_images(split, dataset_dir, 'non_covid')
 
 
 def partition_images(train_size, src, classification):
