@@ -12,7 +12,6 @@ import os
 from PIL import Image
 import re
 
-
 train_dir = os.path.join('res', 'train')
 validation_dir = os.path.join('res', 'validation')
 train_covid_dir = os.path.join(train_dir, 'covid')
@@ -30,9 +29,13 @@ def load_tutorial_data():
 
 
 def preprocess_data(train_images, train_labels, test_images, test_labels, class_names):
+    # WARNING: The following lines will destroy your computer
     # scale values to 0 and 1 before feeding to neural network
-    train_images = train_images / 255.0
-    test_images = test_images / 255.0
+    # for i in range(len(train_images)):
+    # train_images[i] = train_images[i] / 255.0
+    # print(i)
+    # train_images = [img / 255.0 for img in train_images]
+    # test_images = [img / 255.0 for img in test_images]
 
     model = keras.Sequential([
         keras.layers.Flatten(input_shape=(28, 28)),
@@ -76,10 +79,8 @@ def load_data():
     usable_metadata = metadata_csv.loc[metadata_csv['New_ID'].isin(usable_rows)]
 
     # Store all the images we want to use
-    images = [Image.open(os.path.join(path_chestxray, 'images', path)) for path in usable_metadata.filename]
     # We also have to transform our images to numpy arrays
-    # This takes a year...
-    images_as_arrays = [np.array(img) for img in images]
+    images = [np.asarray(Image.open(os.path.join(path_chestxray, 'images', path))) for path in usable_metadata.filename]
 
     # Extract all the labels for the images we are using
     # Covid = 0, Not Covid = 1
@@ -87,9 +88,9 @@ def load_data():
 
     # TODO: Split these two into training + testing sets. For now it's a 50/50 split
     half = int(len(usable_metadata) / 2)
-    train_images = images_as_arrays[:half]
+    train_images = images[:half]
     train_labels = labels[:half]
-    test_images = images_as_arrays[half:]
+    test_images = images[half:]
     test_labels = labels[half:]
     class_names = ['COVID-19', 'NOT COVID-19']
 
@@ -117,8 +118,8 @@ def actual_stuff():
     print("Total validation images:", total_val)
 
     # Define parameters for our network
-    batch_size = 10
-    epochs = 15
+    batch_size = 100
+    epochs = 1
     IMG_HEIGHT = 150
     IMG_WIDTH = 150
 
@@ -190,7 +191,7 @@ def actual_stuff():
 def plotImages(images_arr):
     fig, axes = plt.subplots(1, 5, figsize=(20, 20))
     axes = axes.flatten()
-    for img, ax in zip( images_arr, axes):
+    for img, ax in zip(images_arr, axes):
         ax.imshow(img)
         ax.axis('off')
     plt.tight_layout()
@@ -214,14 +215,34 @@ def count_color_modes(images):
     print('RGBA: ', rgba)
 
 
+def count_image_dims(images):
+    min_width, min_height = images[0].size
+    max_width = min_width
+    max_height = min_height
+
+    for img in images:
+        width, height = img.size
+        if width > max_width:
+            max_width = width
+
+        if width < min_width:
+            min_width = width
+
+        if height > max_height:
+            max_width = height
+
+        if height < min_height:
+            min_height = height
+
+    print('Max width: ', max_width)
+    print('Min width: ', min_width)
+    print('Max height: ', max_height)
+    print('Min height: ', min_height)
+
+
 if __name__ == '__main__':
+    # check_cats_and_dogs()
     # train_images, train_labels, test_images, test_labels, class_names = load_data()
     # print(sys.getsizeof(train_images))
     # preprocess_data(train_images, train_labels, test_images, test_labels, class_names)
     actual_stuff()
-
-
-
-
-
-
