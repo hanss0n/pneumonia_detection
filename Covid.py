@@ -12,43 +12,60 @@ import os
 from PIL import Image
 import re
 
+
+# For ease of use
+class1 = 'NORMAL'
+class2 = 'PNEUMONIA'
 train_dir = os.path.join('res', 'train')
 test_dir = os.path.join('res', 'test')
 validation_dir = os.path.join('res', 'validation')
-train_covid_dir = os.path.join(train_dir, 'NORMAL')
-train_non_covid_dir = os.path.join(train_dir, 'PNEUMONIA')
-validation_covid_dir = os.path.join(validation_dir, 'NORMAL')
-validation_non_covid_dir = os.path.join(validation_dir, 'PNEUMONIA')
+train_class1_dir = os.path.join(train_dir, class1)
+train_class2_dir = os.path.join(train_dir, class2)
+validation_class1_dir = os.path.join(validation_dir, class1)
+validation_class2_dir = os.path.join(validation_dir, class2)
+test_class1_dir = os.path.join(test_dir, class1)
+test_class2_dir = os.path.join(test_dir, class2)
 
 
-def actual_stuff():
+def summarize_dataset(verbose=True):
     # Give an overview of what data we have
-    num_covid_tr = len(os.listdir(train_covid_dir))
-    num_non_covid_tr = len(os.listdir(train_non_covid_dir))
+    num_class1_tr = len(os.listdir(train_class1_dir))
+    num_class2_tr = len(os.listdir(train_class2_dir))
 
-    num_covid_val = len(os.listdir(validation_covid_dir))
-    num_non_covid_val = len(os.listdir(validation_non_covid_dir))
+    num_class1_val = len(os.listdir(validation_class1_dir))
+    num_class2_val = len(os.listdir(validation_class2_dir))
 
-    total_train = num_covid_tr + num_non_covid_tr
-    total_val = num_covid_val + num_non_covid_val
+    num_class1_test = len(os.listdir(test_class1_dir))
+    num_class2_test = len(os.listdir(test_class2_dir))
 
-    print('total training covid images:', num_covid_tr)
-    print('total training non_covid images:', num_non_covid_tr)
+    total_train = num_class1_tr + num_class2_tr
+    total_val = num_class1_val + num_class2_val
+    total_test = num_class1_test + num_class2_test
+    if verbose:
+        print('total training ', os.path.basename(os.path.normpath(train_class1_dir)), ' images: ', num_class1_tr)
+        print('total training ', os.path.basename(os.path.normpath(train_class2_dir)), ' images: ', num_class2_tr)
+        print('total validation ', os.path.basename(os.path.normpath(validation_class1_dir)), ' images: ', num_class1_val)
+        print('total validation ', os.path.basename(os.path.normpath(validation_class2_dir)), ' images: ', num_class2_val)
+        print('total testing ', os.path.basename(os.path.normpath(test_class1_dir)), ' images: ', num_class1_test)
+        print('total testing ', os.path.basename(os.path.normpath(test_class2_dir)), ' images: ', num_class2_test)
+        print('-----------------------------------------------')
+        print("Total training images: ", total_train)
+        print("Total validation images: ", total_val)
+        print("Total test images: ", total_test)
+    return total_train, total_val, total_test
 
-    print('total validation covid images:', num_covid_val)
-    print('total validation non_covid images:', num_non_covid_val)
-    print('-----------------------------------------------')
-    print("Total training images:", total_train)
-    print("Total validation images:", total_val)
+
+def setup_model():
+    # Extract the metadata of our dataset
+    total_train, total_val, total_test = summarize_dataset(verbose=True)
 
     # Define parameters for our network
-    batch_size = 8
-    epochs = 8
-    IMG_HEIGHT = 150
-    IMG_WIDTH = 150
+    batch_size = 16
+    epochs = 15
+    img_height = 150
+    img_width = 150
 
     # Do some rescaling
-    # TODO: Will this work with a combination of grayscale/RGB/RGBA??????????
     train_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our training data
     validation_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our validation data
     test_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our test data
@@ -56,26 +73,24 @@ def actual_stuff():
     train_data_gen = train_image_generator.flow_from_directory(batch_size=batch_size,
                                                                directory=train_dir,
                                                                shuffle=True,
-                                                               target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                               target_size=(img_height, img_width),
                                                                class_mode='binary',
                                                                color_mode='grayscale')
 
     val_data_gen = validation_image_generator.flow_from_directory(batch_size=batch_size,
                                                                   directory=validation_dir,
-                                                                  target_size=(IMG_HEIGHT, IMG_WIDTH),
-                                                                  class_mode='binary',
-                                                                  color_mode='grayscale')
-    
-    test_data_gen = test_image_generator.flow_from_directory(batch_size=batch_size,
-                                                                  directory=test_dir,
-                                                                  target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                                  target_size=(img_height, img_width),
                                                                   class_mode='binary',
                                                                   color_mode='grayscale')
 
-    sample_training_images, _ = next(train_data_gen)
+    test_data_gen = test_image_generator.flow_from_directory(batch_size=batch_size,
+                                                             directory=test_dir,
+                                                             target_size=(img_height, img_width),
+                                                             class_mode='binary',
+                                                             color_mode='grayscale')
 
     model = Sequential([
-        Conv2D(16, 3, padding='same', activation='relu', input_shape=(IMG_HEIGHT, IMG_WIDTH, 1)),
+        Conv2D(16, 3, padding='same', activation='relu', input_shape=(img_height, img_width, 1)),
         MaxPooling2D(),
         Conv2D(32, 3, padding='same', activation='relu'),
         MaxPooling2D(),
@@ -124,16 +139,6 @@ def actual_stuff():
     plt.show()
 
 
-def plotImages(images_arr):
-    fig, axes = plt.subplots(1, 5, figsize=(20, 20))
-    axes = axes.flatten()
-    for img, ax in zip(images_arr, axes):
-        ax.imshow(img)
-        ax.axis('off')
-    plt.tight_layout()
-    plt.show()
-
-
 def count_color_modes(images):
     grey_scale, rgb, rgba, i = 0, 0, 0, 0
     for img in images:
@@ -177,4 +182,4 @@ def count_image_dims(images):
 
 
 if __name__ == '__main__':
-    actual_stuff()
+    setup_model()
