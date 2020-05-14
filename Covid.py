@@ -13,11 +13,12 @@ from PIL import Image
 import re
 
 train_dir = os.path.join('res', 'train')
+test_dir = os.path.join('res', 'test')
 validation_dir = os.path.join('res', 'validation')
-train_covid_dir = os.path.join(train_dir, 'covid')
-train_non_covid_dir = os.path.join(train_dir, 'non_covid')
-validation_covid_dir = os.path.join(validation_dir, 'covid')
-validation_non_covid_dir = os.path.join(validation_dir, 'non_covid')
+train_covid_dir = os.path.join(train_dir, 'NORMAL')
+train_non_covid_dir = os.path.join(train_dir, 'PNEUMONIA')
+validation_covid_dir = os.path.join(validation_dir, 'NORMAL')
+validation_non_covid_dir = os.path.join(validation_dir, 'PNEUMONIA')
 
 
 def load_tutorial_data():
@@ -118,8 +119,8 @@ def actual_stuff():
     print("Total validation images:", total_val)
 
     # Define parameters for our network
-    batch_size = 100
-    epochs = 1
+    batch_size = 8
+    epochs = 8
     IMG_HEIGHT = 150
     IMG_WIDTH = 150
 
@@ -127,22 +128,31 @@ def actual_stuff():
     # TODO: Will this work with a combination of grayscale/RGB/RGBA??????????
     train_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our training data
     validation_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our validation data
+    test_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our test data
 
     train_data_gen = train_image_generator.flow_from_directory(batch_size=batch_size,
                                                                directory=train_dir,
                                                                shuffle=True,
                                                                target_size=(IMG_HEIGHT, IMG_WIDTH),
-                                                               class_mode='binary')
+                                                               class_mode='binary',
+                                                               color_mode='grayscale')
 
     val_data_gen = validation_image_generator.flow_from_directory(batch_size=batch_size,
                                                                   directory=validation_dir,
                                                                   target_size=(IMG_HEIGHT, IMG_WIDTH),
-                                                                  class_mode='binary')
+                                                                  class_mode='binary',
+                                                                  color_mode='grayscale')
+    
+    test_data_gen = test_image_generator.flow_from_directory(batch_size=batch_size,
+                                                                  directory=test_dir,
+                                                                  target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                                  class_mode='binary',
+                                                                  color_mode='grayscale')
 
     sample_training_images, _ = next(train_data_gen)
 
     model = Sequential([
-        Conv2D(16, 3, padding='same', activation='relu', input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)),
+        Conv2D(16, 3, padding='same', activation='relu', input_shape=(IMG_HEIGHT, IMG_WIDTH, 1)),
         MaxPooling2D(),
         Conv2D(32, 3, padding='same', activation='relu'),
         MaxPooling2D(),
@@ -157,13 +167,16 @@ def actual_stuff():
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                   metrics=['accuracy'])
 
-    history = model.fit_generator(
+    history = model.fit(
         train_data_gen,
         steps_per_epoch=total_train // batch_size,
         epochs=epochs,
         validation_data=val_data_gen,
         validation_steps=total_val // batch_size
     )
+
+    predictions = model.evaluate(test_data_gen, steps=25)
+    print(predictions)
 
     acc = history.history['accuracy']
     val_acc = history.history['val_accuracy']
