@@ -1,16 +1,9 @@
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D
+from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-import numpy as np
-from numpy import asarray
 import matplotlib.pyplot as plt
-import csv
-import pandas as pd
 import os
-from PIL import Image
-import re
 
 # For ease of use
 path = 'dataset/kaggle/chest_xray/'
