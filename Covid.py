@@ -7,42 +7,42 @@ import os
 
 # For ease of use
 path = 'dataset/kaggle/chest_xray/'
-class1 = 'NORMAL'
-class2 = 'PNEUMONIA'
+normal = 'NORMAL'
+pneumonia = 'PNEUMONIA'
 train_dir = os.path.join(path, 'train')
 test_dir = os.path.join(path, 'test')
 validation_dir = os.path.join(path, 'val')
-train_class1_dir = os.path.join(train_dir, class1)
-train_class2_dir = os.path.join(train_dir, class2)
-validation_class1_dir = os.path.join(validation_dir, class1)
-validation_class2_dir = os.path.join(validation_dir, class2)
-test_class1_dir = os.path.join(test_dir, class1)
-test_class2_dir = os.path.join(test_dir, class2)
+train_normal_dir = os.path.join(train_dir, normal)
+train_pneumonia_dir = os.path.join(train_dir, pneumonia)
+validation_normal_dir = os.path.join(validation_dir, normal)
+validation_pneumonia_dir = os.path.join(validation_dir, pneumonia)
+test_normal_dir = os.path.join(test_dir, normal)
+test_pneumonia_dir = os.path.join(test_dir, pneumonia)
 
 
 def summarize_dataset(verbose=True):
     # Give an overview of what data we have
-    num_class1_tr = len(os.listdir(train_class1_dir))
-    num_class2_tr = len(os.listdir(train_class2_dir))
+    num_class1_tr = len(os.listdir(train_normal_dir))
+    num_class2_tr = len(os.listdir(train_pneumonia_dir))
 
-    num_class1_val = len(os.listdir(validation_class1_dir))
-    num_class2_val = len(os.listdir(validation_class2_dir))
+    num_class1_val = len(os.listdir(validation_normal_dir))
+    num_class2_val = len(os.listdir(validation_pneumonia_dir))
 
-    num_class1_test = len(os.listdir(test_class1_dir))
-    num_class2_test = len(os.listdir(test_class2_dir))
+    num_class1_test = len(os.listdir(test_normal_dir))
+    num_class2_test = len(os.listdir(test_pneumonia_dir))
 
     total_train = num_class1_tr + num_class2_tr
     total_val = num_class1_val + num_class2_val
     total_test = num_class1_test + num_class2_test
     if verbose:
-        print('total training ', os.path.basename(os.path.normpath(train_class1_dir)), ' images: ', num_class1_tr)
-        print('total training ', os.path.basename(os.path.normpath(train_class2_dir)), ' images: ', num_class2_tr)
-        print('total validation ', os.path.basename(os.path.normpath(validation_class1_dir)), ' images: ',
+        print('total training ', os.path.basename(os.path.normpath(train_normal_dir)), ' images: ', num_class1_tr)
+        print('total training ', os.path.basename(os.path.normpath(train_pneumonia_dir)), ' images: ', num_class2_tr)
+        print('total validation ', os.path.basename(os.path.normpath(validation_normal_dir)), ' images: ',
               num_class1_val)
-        print('total validation ', os.path.basename(os.path.normpath(validation_class2_dir)), ' images: ',
+        print('total validation ', os.path.basename(os.path.normpath(validation_pneumonia_dir)), ' images: ',
               num_class2_val)
-        print('total testing ', os.path.basename(os.path.normpath(test_class1_dir)), ' images: ', num_class1_test)
-        print('total testing ', os.path.basename(os.path.normpath(test_class2_dir)), ' images: ', num_class2_test)
+        print('total testing ', os.path.basename(os.path.normpath(test_normal_dir)), ' images: ', num_class1_test)
+        print('total testing ', os.path.basename(os.path.normpath(test_pneumonia_dir)), ' images: ', num_class2_test)
         print('-----------------------------------------------')
         print("Total training images: ", total_train)
         print("Total validation images: ", total_val)
