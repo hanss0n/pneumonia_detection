@@ -12,7 +12,6 @@ import os
 from PIL import Image
 import re
 
-
 # For ease of use
 path = 'dataset/kaggle/chest_xray/'
 class1 = 'NORMAL'
@@ -45,8 +44,10 @@ def summarize_dataset(verbose=True):
     if verbose:
         print('total training ', os.path.basename(os.path.normpath(train_class1_dir)), ' images: ', num_class1_tr)
         print('total training ', os.path.basename(os.path.normpath(train_class2_dir)), ' images: ', num_class2_tr)
-        print('total validation ', os.path.basename(os.path.normpath(validation_class1_dir)), ' images: ', num_class1_val)
-        print('total validation ', os.path.basename(os.path.normpath(validation_class2_dir)), ' images: ', num_class2_val)
+        print('total validation ', os.path.basename(os.path.normpath(validation_class1_dir)), ' images: ',
+              num_class1_val)
+        print('total validation ', os.path.basename(os.path.normpath(validation_class2_dir)), ' images: ',
+              num_class2_val)
         print('total testing ', os.path.basename(os.path.normpath(test_class1_dir)), ' images: ', num_class1_test)
         print('total testing ', os.path.basename(os.path.normpath(test_class2_dir)), ' images: ', num_class2_test)
         print('-----------------------------------------------')
@@ -138,48 +139,6 @@ def setup_model():
     plt.legend(loc='upper right')
     plt.title('Training and Validation Loss')
     plt.show()
-
-
-def count_color_modes(images):
-    grey_scale, rgb, rgba, i = 0, 0, 0, 0
-    for img in images:
-        if img.mode == 'L':
-            grey_scale += 1
-        if img.mode == 'RGB':
-            rgb += 1
-        if img.mode == 'RGBA':
-            rgba += 1
-        i = i + 1
-
-    print('All: ', i)
-    print('Grayscale: ', grey_scale)
-    print('RGB: ', rgb)
-    print('RGBA: ', rgba)
-
-
-def count_image_dims(images):
-    min_width, min_height = images[0].size
-    max_width = min_width
-    max_height = min_height
-
-    for img in images:
-        width, height = img.size
-        if width > max_width:
-            max_width = width
-
-        if width < min_width:
-            min_width = width
-
-        if height > max_height:
-            max_width = height
-
-        if height < min_height:
-            min_height = height
-
-    print('Max width: ', max_width)
-    print('Min width: ', min_width)
-    print('Max height: ', max_height)
-    print('Min height: ', min_height)
 
 
 if __name__ == '__main__':
