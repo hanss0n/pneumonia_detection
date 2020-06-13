@@ -1,0 +1,58 @@
+Kaggle dataset - Unchanged
+parameters = [
+    batch_size = 16
+    epochs = 15
+    img_height = 150
+    img_width = 150
+    grayscale
+]
+
+total training  NORMAL  images:  1341
+total training  PNEUMONIA  images:  3875
+total validation  NORMAL  images:  8
+total validation  PNEUMONIA  images:  8
+total testing  NORMAL  images:  234
+total testing  PNEUMONIA  images:  390
+-----------------------------------------------
+Total training images:  5216
+Total validation images:  16
+Total test images:  624
+Found 5216 images belonging to 2 classes.
+Found 16 images belonging to 2 classes.
+Found 624 images belonging to 2 classes.
+2020-06-13 11:53:24.534723: I tensorflow/core/platform/cpu_feature_guard.cc:143] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2020-06-13 11:53:24.732644: I tensorflow/core/platform/profile_utils/cpu_utils.cc:102] CPU Frequency: 3201000000 Hz
+2020-06-13 11:53:24.739719: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x429bac0 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-13 11:53:24.739811: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+Epoch 1/15
+326/326 [==============================] - 189s 580ms/step - loss: 0.2089 - accuracy: 0.9103 - val_loss: 0.4713 - val_accuracy: 0.8750
+Epoch 2/15
+326/326 [==============================] - 99s 305ms/step - loss: 0.0944 - accuracy: 0.9618 - val_loss: 0.1337 - val_accuracy: 0.9375
+Epoch 3/15
+326/326 [==============================] - 113s 345ms/step - loss: 0.0634 - accuracy: 0.9762 - val_loss: 0.0986 - val_accuracy: 0.9375
+Epoch 4/15
+326/326 [==============================] - 105s 321ms/step - loss: 0.0551 - accuracy: 0.9783 - val_loss: 0.3131 - val_accuracy: 0.8750
+Epoch 5/15
+326/326 [==============================] - 82s 252ms/step - loss: 0.0398 - accuracy: 0.9843 - val_loss: 0.1635 - val_accuracy: 0.9375
+Epoch 6/15
+326/326 [==============================] - 77s 237ms/step - loss: 0.0302 - accuracy: 0.9881 - val_loss: 0.0389 - val_accuracy: 1.0000
+Epoch 7/15
+326/326 [==============================] - 83s 256ms/step - loss: 0.0234 - accuracy: 0.9914 - val_loss: 0.1713 - val_accuracy: 0.9375
+Epoch 8/15
+326/326 [==============================] - 78s 241ms/step - loss: 0.0242 - accuracy: 0.9900 - val_loss: 0.1008 - val_accuracy: 0.9375
+Epoch 9/15
+326/326 [==============================] - 72s 222ms/step - loss: 0.0166 - accuracy: 0.9923 - val_loss: 0.3808 - val_accuracy: 0.8750
+Epoch 10/15
+326/326 [==============================] - 77s 236ms/step - loss: 0.0093 - accuracy: 0.9964 - val_loss: 0.1644 - val_accuracy: 0.9375
+Epoch 11/15
+326/326 [==============================] - 75s 229ms/step - loss: 0.0186 - accuracy: 0.9937 - val_loss: 0.3654 - val_accuracy: 0.9375
+Epoch 12/15
+326/326 [==============================] - 72s 221ms/step - loss: 0.0102 - accuracy: 0.9962 - val_loss: 0.0371 - val_accuracy: 1.0000
+Epoch 13/15
+326/326 [==============================] - 74s 228ms/step - loss: 0.0095 - accuracy: 0.9965 - val_loss: 0.0839 - val_accuracy: 1.0000
+Epoch 14/15
+326/326 [==============================] - 73s 224ms/step - loss: 0.0080 - accuracy: 0.9967 - val_loss: 0.1279 - val_accuracy: 0.9375
+Epoch 15/15
+326/326 [==============================] - 72s 221ms/step - loss: 0.0064 - accuracy: 0.9981 - val_loss: 0.0516 - val_accuracy: 1.0000
+25/25 [==============================] - 9s 349ms/step - loss: 2.5734 - accuracy: 0.7800
+[2.5733537673950195, 0.7799999713897705]
