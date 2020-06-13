@@ -1,54 +1,186 @@
 import tensorflow as tf
-import keras
+from tensorflow import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import numpy as np
+from numpy import asarray
 import matplotlib.pyplot as plt
+import csv
+import pandas as pd
+import os
+from PIL import Image
+import re
 
-fashion_mnist = keras.datasets.fashion_mnist
 
-(train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()  # REPLACE WITH COVID SHIT
+# For ease of use
+path = 'dataset/kaggle/chest_xray/'
+class1 = 'NORMAL'
+class2 = 'PNEUMONIA'
+train_dir = os.path.join(path, 'train')
+test_dir = os.path.join(path, 'test')
+validation_dir = os.path.join(path, 'val')
+train_class1_dir = os.path.join(train_dir, class1)
+train_class2_dir = os.path.join(train_dir, class2)
+validation_class1_dir = os.path.join(validation_dir, class1)
+validation_class2_dir = os.path.join(validation_dir, class2)
+test_class1_dir = os.path.join(test_dir, class1)
+test_class2_dir = os.path.join(test_dir, class2)
 
-class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', # Replace with covid, notcovid
-               'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
 
-# preprocess data 
-plt.figure()
-plt.imshow(train_images[0])
-plt.colorbar()
-plt.grid(False)
-plt.show()
+def summarize_dataset(verbose=True):
+    # Give an overview of what data we have
+    num_class1_tr = len(os.listdir(train_class1_dir))
+    num_class2_tr = len(os.listdir(train_class2_dir))
 
-# scale values to 0 and 1 before feeding to neural network
-train_images = train_images / 255.0
-test_images = test_images / 255.0
+    num_class1_val = len(os.listdir(validation_class1_dir))
+    num_class2_val = len(os.listdir(validation_class2_dir))
 
-plt.figure(figsize=(10, 10))
-for i in range(25):
-    plt.subplot(5, 5, i + 1)
-    plt.xticks([])
-    plt.yticks([])
-    plt.grid(False)
-    plt.imshow(train_images[i], cmap=plt.cm.binary)
-    plt.xlabel(class_names[train_labels[i]])
-plt.show()
+    num_class1_test = len(os.listdir(test_class1_dir))
+    num_class2_test = len(os.listdir(test_class2_dir))
 
-model = keras.Sequential([
-    keras.layers.Flatten(input_shape=(28, 28)),
-    keras.layers.Dense(128, activation='relu'),
-    keras.layers.Dense(10)
-])
+    total_train = num_class1_tr + num_class2_tr
+    total_val = num_class1_val + num_class2_val
+    total_test = num_class1_test + num_class2_test
+    if verbose:
+        print('total training ', os.path.basename(os.path.normpath(train_class1_dir)), ' images: ', num_class1_tr)
+        print('total training ', os.path.basename(os.path.normpath(train_class2_dir)), ' images: ', num_class2_tr)
+        print('total validation ', os.path.basename(os.path.normpath(validation_class1_dir)), ' images: ', num_class1_val)
+        print('total validation ', os.path.basename(os.path.normpath(validation_class2_dir)), ' images: ', num_class2_val)
+        print('total testing ', os.path.basename(os.path.normpath(test_class1_dir)), ' images: ', num_class1_test)
+        print('total testing ', os.path.basename(os.path.normpath(test_class2_dir)), ' images: ', num_class2_test)
+        print('-----------------------------------------------')
+        print("Total training images: ", total_train)
+        print("Total validation images: ", total_val)
+        print("Total test images: ", total_test)
+    return total_train, total_val, total_test
 
-model.compile(optimizer='adam',
-              loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
 
-model.fit(train_images, train_labels, epochs=5)
+def setup_model():
+    # Extract the metadata of our dataset
+    total_train, total_val, total_test = summarize_dataset(verbose=True)
 
-test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
+    # Define parameters for our network
+    batch_size = 16
+    epochs = 15
+    img_height = 150
+    img_width = 150
 
-probability_model = keras.Sequential([model,
-                                      keras.layers.Softmax()])
+    # Do some rescaling
+    train_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our training data
+    validation_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our validation data
+    test_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our test data
 
-predictions = probability_model.predict(test_images)
+    train_data_gen = train_image_generator.flow_from_directory(batch_size=batch_size,
+                                                               directory=train_dir,
+                                                               shuffle=True,
+                                                               target_size=(img_height, img_width),
+                                                               class_mode='binary',
+                                                               color_mode='grayscale')
+
+    val_data_gen = validation_image_generator.flow_from_directory(batch_size=batch_size,
+                                                                  directory=validation_dir,
+                                                                  target_size=(img_height, img_width),
+                                                                  class_mode='binary',
+                                                                  color_mode='grayscale')
+
+    test_data_gen = test_image_generator.flow_from_directory(batch_size=batch_size,
+                                                             directory=test_dir,
+                                                             target_size=(img_height, img_width),
+                                                             class_mode='binary',
+                                                             color_mode='grayscale')
+
+    model = Sequential([
+        Conv2D(16, 3, padding='same', activation='relu', input_shape=(img_height, img_width, 1)),
+        MaxPooling2D(),
+        Conv2D(32, 3, padding='same', activation='relu'),
+        MaxPooling2D(),
+        Conv2D(64, 3, padding='same', activation='relu'),
+        MaxPooling2D(),
+        Flatten(),
+        Dense(512, activation='relu'),
+        Dense(1)
+    ])
+
+    model.compile(optimizer='adam',
+                  loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+                  metrics=['accuracy'])
+
+    history = model.fit(
+        train_data_gen,
+        steps_per_epoch=total_train // batch_size,
+        epochs=epochs,
+        validation_data=val_data_gen,
+        validation_steps=total_val // batch_size
+    )
+
+    predictions = model.evaluate(test_data_gen, steps=25)
+    print(predictions)
+
+    acc = history.history['accuracy']
+    val_acc = history.history['val_accuracy']
+
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+
+    epochs_range = range(epochs)
+
+    plt.figure(figsize=(8, 8))
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs_range, acc, label='Training Accuracy')
+    plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+    plt.legend(loc='lower right')
+    plt.title('Training and Validation Accuracy')
+
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs_range, loss, label='Training Loss')
+    plt.plot(epochs_range, val_loss, label='Validation Loss')
+    plt.legend(loc='upper right')
+    plt.title('Training and Validation Loss')
+    plt.show()
+
+
+def count_color_modes(images):
+    grey_scale, rgb, rgba, i = 0, 0, 0, 0
+    for img in images:
+        if img.mode == 'L':
+            grey_scale += 1
+        if img.mode == 'RGB':
+            rgb += 1
+        if img.mode == 'RGBA':
+            rgba += 1
+        i = i + 1
+
+    print('All: ', i)
+    print('Grayscale: ', grey_scale)
+    print('RGB: ', rgb)
+    print('RGBA: ', rgba)
+
+
+def count_image_dims(images):
+    min_width, min_height = images[0].size
+    max_width = min_width
+    max_height = min_height
+
+    for img in images:
+        width, height = img.size
+        if width > max_width:
+            max_width = width
+
+        if width < min_width:
+            min_width = width
+
+        if height > max_height:
+            max_width = height
+
+        if height < min_height:
+            min_height = height
+
+    print('Max width: ', max_width)
+    print('Min width: ', min_width)
+    print('Max height: ', max_height)
+    print('Min height: ', min_height)
+
 
 if __name__ == '__main__':
-    print('test')
+    setup_model()
