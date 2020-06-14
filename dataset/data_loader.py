@@ -3,7 +3,6 @@ import os
 import random
 import shutil
 
-
 def load_kaggle():
     if not os.path.exists(os.path.join('kaggle', 'chest_xray')):
         dataset = 'paultimothymooney/chest-xray-pneumonia'
@@ -12,7 +11,6 @@ def load_kaggle():
         kaggle.api.dataset_download_files(dataset=dataset, path=target, unzip=True, quiet=False)
     else:
         print('The Kaggle dataset is already downloaded')
-
 
 def re_partition_kaggle():
     num_to_move = 200
@@ -38,7 +36,6 @@ def train_2_val(classification, train, val, num_to_move):
 def move_images(src, dest, images):
     for filename in images:
         shutil.move(os.path.join(src, filename), dest)
-
 
 if __name__ == '__main__':
     load_kaggle()
