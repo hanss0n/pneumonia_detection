@@ -1,16 +1,19 @@
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import matplotlib.pyplot as plt
 import os
 
+from tensorflow.keras.preprocessing import image_dataset_from_directory
+
 # For ease of use
+# TODO: should probably be moved to get_data function
 path = 'dataset/kaggle/chest_xray/'
 normal = 'NORMAL'
 pneumonia = 'PNEUMONIA'
 train_dir = os.path.join(path, 'train')
 test_dir = os.path.join(path, 'test')
+print(test_dir)
 validation_dir = os.path.join(path, 'val')
 train_normal_dir = os.path.join(train_dir, normal)
 train_pneumonia_dir = os.path.join(train_dir, pneumonia)
@@ -50,39 +53,36 @@ def summarize_dataset(verbose=True):
     return total_train, total_val, total_test
 
 
+def get_data(batch_size, img_dims, shuffle=False):
+    (img_height, img_width) = img_dims
+    train_data = image_dataset_from_directory(train_dir, color_mode='grayscale',
+                                              image_size=(img_height, img_width), batch_size=batch_size,
+                                              shuffle=shuffle)
+    val_data = image_dataset_from_directory(validation_dir, color_mode='grayscale',
+                                            image_size=(img_height, img_width), batch_size=batch_size, shuffle=shuffle)
+    test_data = image_dataset_from_directory(test_dir, color_mode='grayscale',
+                                             image_size=(img_height, img_width),
+                                             batch_size=batch_size, shuffle=shuffle)
+    return train_data, val_data, test_data
+
+
 def setup_model():
+    # set seeds to see actual improvements
+    tf.random.set_seed(5)
+    tf.random.uniform([1], seed=5)  # doesn't work?
+
     # Extract the metadata of our dataset
+    # TODO: redundant method
     total_train, total_val, total_test = summarize_dataset(verbose=True)
 
     # Define parameters for our network
     batch_size = 16
-    epochs = 15
+    epochs = 1
     img_height = 150
     img_width = 150
 
-    # Do some rescaling
-    train_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our training data
-    validation_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our validation data
-    test_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our test data
-
-    train_data_gen = train_image_generator.flow_from_directory(batch_size=batch_size,
-                                                               directory=train_dir,
-                                                               shuffle=True,
-                                                               target_size=(img_height, img_width),
-                                                               class_mode='binary',
-                                                               color_mode='grayscale')
-
-    val_data_gen = validation_image_generator.flow_from_directory(batch_size=batch_size,
-                                                                  directory=validation_dir,
-                                                                  target_size=(img_height, img_width),
-                                                                  class_mode='binary',
-                                                                  color_mode='grayscale')
-
-    test_data_gen = test_image_generator.flow_from_directory(batch_size=batch_size,
-                                                             directory=test_dir,
-                                                             target_size=(img_height, img_width),
-                                                             class_mode='binary',
-                                                             color_mode='grayscale')
+    # 0.7628205418586731
+    train_data, val_data, test_data = get_data(batch_size, (img_height, img_width), shuffle=False)
 
     model = Sequential([
         Conv2D(16, 3, padding='same', activation='relu', input_shape=(img_height, img_width, 1)),
@@ -101,14 +101,14 @@ def setup_model():
                   metrics=['accuracy'])
 
     history = model.fit(
-        train_data_gen,
+        train_data,
         steps_per_epoch=total_train // batch_size,
         epochs=epochs,
-        validation_data=val_data_gen,
+        validation_data=val_data,
         validation_steps=total_val // batch_size
     )
 
-    predictions = model.evaluate(test_data_gen, steps=25)
+    predictions = model.evaluate(test_data, steps=len(test_data))
     print(predictions)
 
     acc = history.history['accuracy']
