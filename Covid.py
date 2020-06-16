@@ -57,12 +57,12 @@ def get_data(batch_size, img_dims, shuffle=False):
     (img_height, img_width) = img_dims
     train_data = image_dataset_from_directory(train_dir, color_mode='grayscale',
                                               image_size=(img_height, img_width), batch_size=batch_size,
-                                              shuffle=shuffle)
+                                              shuffle=shuffle, seed=1337)
     val_data = image_dataset_from_directory(validation_dir, color_mode='grayscale',
-                                            image_size=(img_height, img_width), batch_size=batch_size, shuffle=shuffle)
+                                            image_size=(img_height, img_width), batch_size=batch_size, shuffle=False)
     test_data = image_dataset_from_directory(test_dir, color_mode='grayscale',
                                              image_size=(img_height, img_width),
-                                             batch_size=batch_size, shuffle=shuffle)
+                                             batch_size=batch_size, shuffle=False)
     return train_data, val_data, test_data
 
 
@@ -82,7 +82,7 @@ def setup_model():
     img_width = 150
 
     # 0.7628205418586731
-    train_data, val_data, test_data = get_data(batch_size, (img_height, img_width), shuffle=False)
+    train_data, val_data, test_data = get_data(batch_size, (img_height, img_width), shuffle=True)
 
     model = Sequential([
         Conv2D(16, 3, padding='same', activation='relu', input_shape=(img_height, img_width, 1)),
