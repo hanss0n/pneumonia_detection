@@ -3,8 +3,10 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 import matplotlib.pyplot as plt
 import os
+from mixup import MixupImageDataGenerator
 
 from tensorflow.keras.preprocessing import image_dataset_from_directory
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 # For ease of use
 # TODO: should probably be moved to get_data function
@@ -55,9 +57,10 @@ def summarize_dataset(verbose=True):
 
 def get_data(batch_size, img_dims, shuffle=False):
     (img_height, img_width) = img_dims
-    train_data = image_dataset_from_directory(train_dir, color_mode='grayscale',
-                                              image_size=(img_height, img_width), batch_size=batch_size,
-                                              shuffle=shuffle, seed=1337)
+    train_gen = ImageDataGenerator(rescale=1. / 255)
+    train_data = MixupImageDataGenerator(generator=train_gen, directory=train_dir, color_mode='grayscale',
+                                         image_size=(img_height, img_width), batch_size=batch_size,
+                                         shuffle=shuffle, seed=1337)
     val_data = image_dataset_from_directory(validation_dir, color_mode='grayscale',
                                             image_size=(img_height, img_width), batch_size=batch_size, shuffle=False)
     test_data = image_dataset_from_directory(test_dir, color_mode='grayscale',
@@ -100,9 +103,10 @@ def setup_model():
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                   metrics=['accuracy'])
 
+    train_data.reset()
     history = model.fit(
         train_data,
-        steps_per_epoch=total_train // batch_size,
+        steps_per_epoch=train_data.get_steps_per_epoch(),
         epochs=epochs,
         validation_data=val_data,
         validation_steps=total_val // batch_size
