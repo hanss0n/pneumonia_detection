@@ -197,3 +197,7 @@ fabric.properties
 
 # Datasets
 dataset/kaggle
+dataset/train
+dataset/val
+dataset/test
+
