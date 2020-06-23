@@ -13,7 +13,8 @@ def load_kaggle(dataset, target, subdir=''):
     :param subdir: Default empty. Optional string which specifies the path from target to the actual data.
                    Ex. if there is a subdirectory to the target on kaggle.com, target/subdir/images
 
-    :return the path to the directory containing the images. That is, the path/test, path/train, path/val
+    :return the path to the directory containing the images. That is, the following paths exists: path/test,
+            path/train, path/val
     """
     data_path = os.path.join(target, subdir)
     print(data_path)
@@ -24,7 +25,8 @@ def load_kaggle(dataset, target, subdir=''):
     else:
         print('The Kaggle dataset is already downloaded')
 
-def re_partition_kaggle():
+
+def increase_val_set():
     num_to_move = 200
     random.seed(1337)
     train_dir = os.path.join('kaggle', 'chest_xray', 'train')
