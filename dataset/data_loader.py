@@ -3,12 +3,24 @@ import os
 import random
 import shutil
 
-def load_kaggle():
-    if not os.path.exists(os.path.join('kaggle', 'chest_xray')):
-        dataset = 'paultimothymooney/chest-xray-pneumonia'
-        target = 'kaggle'
+
+def load_kaggle(dataset, target, subdir=''):
+    """
+    Download a dataset from kaggle.com
+
+    :param dataset: The dataset to download
+    :param target: Where to download it to
+    :param subdir: Default empty. Optional string which specifies the path from target to the actual data.
+                   Ex. if there is a subdirectory to the target on kaggle.com, target/subdir/images
+
+    :return the path to the directory containing the images. That is, the path/test, path/train, path/val
+    """
+    data_path = os.path.join(target, subdir)
+    print(data_path)
+    if not os.path.exists(data_path):
         kaggle.api.authenticate()
         kaggle.api.dataset_download_files(dataset=dataset, path=target, unzip=True, quiet=False)
+        return data_path
     else:
         print('The Kaggle dataset is already downloaded')
 
@@ -38,5 +50,5 @@ def move_images(src, dest, images):
         shutil.move(os.path.join(src, filename), dest)
 
 if __name__ == '__main__':
-    load_kaggle()
-    re_partition_kaggle()
+    load_kaggle('paultimothymooney/chest-xray-pneumonia', 'kaggle')
+    increase_val_set()
