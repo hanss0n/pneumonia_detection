@@ -8,7 +8,7 @@ from tensorflow.keras.preprocessing import image_dataset_from_directory
 
 # For ease of use
 # TODO: should probably be moved to get_data function
-path = 'dataset/kaggle/chest_xray/'
+path = 'dataset'
 normal = 'NORMAL'
 pneumonia = 'PNEUMONIA'
 train_dir = os.path.join(path, 'train')
