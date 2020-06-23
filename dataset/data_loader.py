@@ -17,13 +17,12 @@ def load_kaggle(dataset, target, subdir=''):
             path/train, path/val
     """
     data_path = os.path.join(target, subdir)
-    print(data_path)
     if not os.path.exists(data_path):
         kaggle.api.authenticate()
         kaggle.api.dataset_download_files(dataset=dataset, path=target, unzip=True, quiet=False)
-        return data_path
     else:
         print('The Kaggle dataset is already downloaded')
+    return data_path
 
 
 def increase_val_set():
