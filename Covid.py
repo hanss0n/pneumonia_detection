@@ -110,13 +110,17 @@ def setup_model():
     predictions = model.evaluate(test_data, steps=len(test_data))
     print(predictions)
 
-    acc = history.history['accuracy']
-    val_acc = history.history['val_accuracy']
+    plot_model(history)
 
-    loss = history.history['loss']
-    val_loss = history.history['val_loss']
 
-    epochs_range = range(epochs)
+def plot_model(results):
+    acc = results.history['accuracy']
+    val_acc = results.history['val_accuracy']
+
+    loss = results.history['loss']
+    val_loss = results.history['val_loss']
+
+    epochs_range = range(len(acc))
 
     plt.figure(figsize=(8, 8))
     plt.subplot(1, 2, 1)
