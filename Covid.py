@@ -13,7 +13,6 @@ normal = 'NORMAL'
 pneumonia = 'PNEUMONIA'
 train_dir = os.path.join(path, 'train')
 test_dir = os.path.join(path, 'test')
-print(test_dir)
 validation_dir = os.path.join(path, 'val')
 train_normal_dir = os.path.join(train_dir, normal)
 train_pneumonia_dir = os.path.join(train_dir, pneumonia)
