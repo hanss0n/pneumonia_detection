@@ -2,6 +2,8 @@ import kaggle
 import os
 import random
 import shutil
+from PIL import Image
+
 
 def load_kaggle():
     if not os.path.exists(os.path.join('kaggle', 'chest_xray')):
@@ -11,6 +13,7 @@ def load_kaggle():
         kaggle.api.dataset_download_files(dataset=dataset, path=target, unzip=True, quiet=False)
     else:
         print('The Kaggle dataset is already downloaded')
+
 
 def re_partition_kaggle():
     num_to_move = 200
@@ -36,6 +39,25 @@ def train_2_val(classification, train, val, num_to_move):
 def move_images(src, dest, images):
     for filename in images:
         shutil.move(os.path.join(src, filename), dest)
+
+
+def count_color_modes(images):
+    grey_scale, rgb, rgba, i = 0, 0, 0, 0
+    for im in images:
+        img = Image.open(im)
+        if img.mode == 'L':
+            grey_scale += 1
+        if img.mode == 'RGB':
+            rgb += 1
+        if img.mode == 'RGBA':
+            rgba += 1
+        i = i + 1
+
+    print('All: ', i)
+    print('Grayscale: ', grey_scale)
+    print('RGB: ', rgb)
+    print('RGBA: ', rgba)
+
 
 if __name__ == '__main__':
     load_kaggle()
