@@ -99,6 +99,7 @@ def partition_dataset(subsets, classifications, train, val, test, images):
               'Val =', val, '\n'
               'Test =', test)
     else:
+        print('Start partitioning data...')
         subset_regex = '(' + ('|'.join(subsets)) + ')'
         for img in images:
             partition = random.randrange(100)
@@ -109,7 +110,8 @@ def partition_dataset(subsets, classifications, train, val, test, images):
             else:
                 new_set = 'test'
             new_path = re.sub('.+' + os.path.sep + subset_regex, new_set, img)
-            shutil.copy(img, new_path)
+            if not os.path.exists(new_path):
+                shutil.copy(img, new_path)
 
 
 if __name__ == '__main__':
