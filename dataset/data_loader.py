@@ -39,4 +39,4 @@ def move_images(src, dest, images):
 
 if __name__ == '__main__':
     load_kaggle()
-    re_partition_kaggle()
+    # re_partition_kaggle()
