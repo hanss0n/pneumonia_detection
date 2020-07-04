@@ -3,7 +3,8 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 import matplotlib.pyplot as plt
 import os
-from mixup import MixupImageDataGenerator
+import numpy as np
+import cv2
 
 from tensorflow.keras.preprocessing import image_dataset_from_directory
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
@@ -55,18 +56,34 @@ def summarize_dataset(verbose=True):
     return total_train, total_val, total_test
 
 
-def get_data(batch_size, img_dims, shuffle=False):
-    (img_height, img_width) = img_dims
-    train_gen = ImageDataGenerator(rescale=1. / 255)
-    train_data = MixupImageDataGenerator(generator=train_gen, directory=train_dir, color_mode='grayscale',
-                                         image_size=(img_height, img_width), batch_size=batch_size,
-                                         shuffle=shuffle, seed=1337)
-    val_data = image_dataset_from_directory(validation_dir, color_mode='grayscale',
-                                            image_size=(img_height, img_width), batch_size=batch_size, shuffle=False)
-    test_data = image_dataset_from_directory(test_dir, color_mode='grayscale',
-                                             image_size=(img_height, img_width),
-                                             batch_size=batch_size, shuffle=False)
-    return train_data, val_data, test_data
+labels = ['PNEUMONIA', 'NORMAL']
+img_size = 150
+
+
+def load_data(data_dir, img_dims):
+    img_height, img_width = img_dims
+    data = []
+    for label in labels:
+        path = os.path.join(data_dir, label)
+        class_num = labels.index(label)
+        for img in os.listdir(path):
+            try:
+                img_arr = cv2.imread(os.path.join(path, img), cv2.IMREAD_GRAYSCALE)
+                resized_arr = cv2.resize(img_arr, (img_size, img_size))  # Reshaping images to preferred size
+                data.append([resized_arr, class_num])
+            except Exception as e:
+                print(e)
+    data = np.array(data)
+    train_x = []
+    train_y = []
+    for img, label in data:
+        train_x.append(img)
+        train_y.append(label)
+
+    train_x = np.array(train_x) / 255
+    train_x = train_x.reshape(-1, img_height, img_width, 1)
+    train_y = np.array(train_y)
+    return train_x, train_y
 
 
 def setup_model():
@@ -83,9 +100,11 @@ def setup_model():
     epochs = 1
     img_height = 150
     img_width = 150
+    img_dims = (img_height, img_width)
 
-    # 0.7628205418586731
-    train_data, val_data, test_data = get_data(batch_size, (img_height, img_width), shuffle=True)
+    (train_x, train_y) = load_data(train_dir, img_dims)
+    (val_x, val_y) = load_data(validation_dir, img_dims)
+    (test_x, test_y) = load_data(test_dir, img_dims)
 
     model = Sequential([
         Conv2D(16, 3, padding='same', activation='relu', input_shape=(img_height, img_width, 1)),
@@ -103,10 +122,14 @@ def setup_model():
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                   metrics=['accuracy'])
 
-    train_data.reset()
+    gen = ImageDataGenerator()
+    train_data = gen.flow(train_x, train_y, batch_size=batch_size)
+    val_data = gen.flow(val_x, val_y, batch_size=batch_size)
+    test_data = gen.flow(test_x, test_y, batch_size=batch_size)
+
     history = model.fit(
         train_data,
-        steps_per_epoch=train_data.get_steps_per_epoch(),
+        steps_per_epoch=total_train // batch_size,
         epochs=epochs,
         validation_data=val_data,
         validation_steps=total_val // batch_size
