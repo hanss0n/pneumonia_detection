@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 import cv2
+from tensorflow.keras.layers import Dropout
 
 from tensorflow.keras.preprocessing import image_dataset_from_directory
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
@@ -97,22 +98,44 @@ def setup_model():
 
     # Define parameters for our network
     batch_size = 16
-    epochs = 1
+    epochs = 12
     img_height = 150
     img_width = 150
     img_dims = (img_height, img_width)
 
-    (train_x, train_y) = load_data(train_dir, img_dims)
-    (val_x, val_y) = load_data(validation_dir, img_dims)
-    (test_x, test_y) = load_data(test_dir, img_dims)
+    # 0.7628205418586731
+    train_x, train_y = load_data(train_dir, img_dims)
+    val_x, val_y = load_data(validation_dir, img_dims)
+    test_x, test_y = load_data(test_dir, img_dims)
+
+    gen = ImageDataGenerator(
+        featurewise_center=False,  # set input mean to 0 over the dataset
+        samplewise_center=False,  # set each sample mean to 0
+        featurewise_std_normalization=False,  # divide inputs by std of the dataset
+        samplewise_std_normalization=False,  # divide each input by its std
+        zca_whitening=False,  # apply ZCA whitening
+        rotation_range=30,  # randomly rotate images in the range (degrees, 0 to 180)
+        zoom_range=0.2,  # Randomly zoom image
+        width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
+        height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
+        horizontal_flip=True,  # randomly flip images
+        vertical_flip=False)  # randomly flip images
+
+    gen.fit(train_x)
+
+    train_gen = gen.flow(train_x, train_y, batch_size)
+    val_gen = gen.flow(val_x, val_y, batch_size)
 
     model = Sequential([
-        Conv2D(16, 3, padding='same', activation='relu', input_shape=(img_height, img_width, 1)),
+        Conv2D(16, 3, padding='same', activation='relu',
+               input_shape=(img_height, img_width, 1)),
         MaxPooling2D(),
+        Dropout(0.2),
         Conv2D(32, 3, padding='same', activation='relu'),
         MaxPooling2D(),
         Conv2D(64, 3, padding='same', activation='relu'),
         MaxPooling2D(),
+        Dropout(0.2),
         Flatten(),
         Dense(512, activation='relu'),
         Dense(1)
@@ -122,29 +145,29 @@ def setup_model():
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                   metrics=['accuracy'])
 
-    gen = ImageDataGenerator()
-    train_data = gen.flow(train_x, train_y, batch_size=batch_size)
-    val_data = gen.flow(val_x, val_y, batch_size=batch_size)
-    test_data = gen.flow(test_x, test_y, batch_size=batch_size)
-
     history = model.fit(
-        train_data,
+        train_gen,
         steps_per_epoch=total_train // batch_size,
         epochs=epochs,
-        validation_data=val_data,
+        validation_data=val_gen,
         validation_steps=total_val // batch_size
     )
 
-    predictions = model.evaluate(test_data, steps=len(test_data))
-    print(predictions)
+    test_loss, test_score = model.evaluate(test_x, test_y, batch_size=batch_size)
+    print("Loss on test set: ", test_loss)
+    print("Accuracy on test set: ", test_score)
 
-    acc = history.history['accuracy']
-    val_acc = history.history['val_accuracy']
+    plot_model(history)
 
-    loss = history.history['loss']
-    val_loss = history.history['val_loss']
 
-    epochs_range = range(epochs)
+def plot_model(results):
+    acc = results.history['accuracy']
+    val_acc = results.history['val_accuracy']
+
+    loss = results.history['loss']
+    val_loss = results.history['val_loss']
+
+    epochs_range = range(len(acc))
 
     plt.figure(figsize=(8, 8))
     plt.subplot(1, 2, 1)
