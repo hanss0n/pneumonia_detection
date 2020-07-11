@@ -11,6 +11,8 @@ from image_augment import mixup, cutmix
 from tensorflow.keras.preprocessing import image_dataset_from_directory
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
+seed = 123
+
 # For ease of use
 # TODO: should probably be moved to get_data function
 path = 'dataset/kaggle/chest_xray/'
@@ -90,10 +92,10 @@ def load_and_preprocess_data(data_dir, img_dims):
     return train_x, train_y
 
 
-def setup_model():
+def setup_model(augmentation='mixup', alpha=4):
     # set seeds to see actual improvements
-    tf.random.set_seed(1337)
-    tf.random.uniform([1], seed=1337)  # doesn't work?
+    tf.random.set_seed(seed)
+    tf.random.uniform([1], seed=seed)  # doesn't work?
 
     # Extract the metadata of our dataset
     # TODO: redundant method
@@ -108,15 +110,23 @@ def setup_model():
 
     # 0.7628205418586731
     train_x, train_y = load_and_preprocess_data(train_dir, img_dims)
-    plt.imshow(train_x[4][:, :, 0])
-    plt.title('Before CutMix')
-    plt.show()
 
-    train_x, train_y = cutmix(train_x, train_y, 0.5)
-
-    plt.imshow(train_x[4][:, :, 0])
-    plt.title('After CutMix')
-    plt.show()
+    if augmentation == 'cutmix':
+        plt.imshow(train_x[4][:, :, 0])
+        plt.title('Before CutMix')
+        plt.show()
+        train_x, train_y = cutmix(train_x, train_y, alpha, seed=seed)
+        plt.imshow(train_x[4][:, :, 0])
+        plt.title('After CutMix')
+        plt.show()
+    if augmentation == 'mixup':
+        plt.imshow(train_x[4][:, :, 0])
+        plt.title('Before Mixup')
+        plt.show()
+        train_x, train_y = mixup(train_x, train_y, alpha, seed=seed)
+        plt.imshow(train_x[4][:, :, 0])
+        plt.title('After Mixup')
+        plt.show()
 
     val_x, val_y = load_and_preprocess_data(validation_dir, img_dims)
     test_x, test_y = load_and_preprocess_data(test_dir, img_dims)
@@ -136,8 +146,8 @@ def setup_model():
 
     gen.fit(train_x)
 
-    train_gen = gen.flow(train_x, train_y, batch_size, seed=1337)
-    val_gen = gen.flow(val_x, val_y, batch_size, seed=1337)
+    train_gen = gen.flow(train_x, train_y, batch_size, seed=seed)
+    val_gen = gen.flow(val_x, val_y, batch_size, seed=seed)
 
     model = Sequential([
         Conv2D(16, 3, padding='same', activation='relu',
@@ -198,4 +208,4 @@ def plot_model(results):
 
 
 if __name__ == '__main__':
-    setup_model()
+    setup_model(augmentation='cutmix', alpha=1)
