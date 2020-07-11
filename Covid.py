@@ -61,6 +61,7 @@ labels = ['PNEUMONIA', 'NORMAL']
 img_size = 150
 
 
+# DISCLAIMER: code from: https://www.kaggle.com/madz2000/pneumonia-detection-using-cnn-92-6-accuracy
 def load_data(data_dir, img_dims):
     img_height, img_width = img_dims
     data = []
@@ -87,6 +88,24 @@ def load_data(data_dir, img_dims):
     return train_x, train_y
 
 
+# DISCLAIMER: Code for mixup-implementation from: https://www.kaggle.com/qqgeogor/keras-nn-mixup/comments#480542
+def mixup_data(x, y, alpha=1.0):
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else:
+        lam = 1
+
+    sample_size = x.shape[0]
+    index_array = np.arange(sample_size)
+    np.random.shuffle(index_array)
+
+    mixed_x = lam * x + (1 - lam) * x[index_array]
+    mixed_y = (lam * y) + ((1 - lam) * y[index_array])
+    #     print((1 - lam) * y[index_array])
+    #     print((lam * y).shape,((1 - lam) * y[index_array]).shape)
+    return mixed_x, mixed_y
+
+
 def setup_model():
     # set seeds to see actual improvements
     tf.random.set_seed(5)
@@ -105,6 +124,14 @@ def setup_model():
 
     # 0.7628205418586731
     train_x, train_y = load_data(train_dir, img_dims)
+    plt.imshow(train_x[4][:, :, 0])
+    plt.title('Before Mixup')
+    plt.show()
+    train_x, train_y = mixup_data(train_x, train_y, 4)
+    plt.imshow(train_x[4][:, :, 0])
+    plt.title('After Mixup')
+    plt.show()
+
     val_x, val_y = load_data(validation_dir, img_dims)
     test_x, test_y = load_data(test_dir, img_dims)
 
