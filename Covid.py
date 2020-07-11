@@ -6,6 +6,7 @@ import os
 import numpy as np
 import cv2
 from tensorflow.keras.layers import Dropout
+from image_augment import mixup, cutmix
 
 from tensorflow.keras.preprocessing import image_dataset_from_directory
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
@@ -61,8 +62,9 @@ labels = ['PNEUMONIA', 'NORMAL']
 img_size = 150
 
 
+# TODO: move to data_loader
 # DISCLAIMER: code from: https://www.kaggle.com/madz2000/pneumonia-detection-using-cnn-92-6-accuracy
-def load_data(data_dir, img_dims):
+def load_and_preprocess_data(data_dir, img_dims):
     img_height, img_width = img_dims
     data = []
     for label in labels:
@@ -88,28 +90,10 @@ def load_data(data_dir, img_dims):
     return train_x, train_y
 
 
-# DISCLAIMER: Code for mixup-implementation from: https://www.kaggle.com/qqgeogor/keras-nn-mixup/comments#480542
-def mixup_data(x, y, alpha=1.0):
-    if alpha > 0:
-        lam = np.random.beta(alpha, alpha)
-    else:
-        lam = 1
-
-    sample_size = x.shape[0]
-    index_array = np.arange(sample_size)
-    np.random.shuffle(index_array)
-
-    mixed_x = lam * x + (1 - lam) * x[index_array]
-    mixed_y = (lam * y) + ((1 - lam) * y[index_array])
-    #     print((1 - lam) * y[index_array])
-    #     print((lam * y).shape,((1 - lam) * y[index_array]).shape)
-    return mixed_x, mixed_y
-
-
 def setup_model():
     # set seeds to see actual improvements
-    tf.random.set_seed(5)
-    tf.random.uniform([1], seed=5)  # doesn't work?
+    tf.random.set_seed(1337)
+    tf.random.uniform([1], seed=1337)  # doesn't work?
 
     # Extract the metadata of our dataset
     # TODO: redundant method
@@ -123,17 +107,19 @@ def setup_model():
     img_dims = (img_height, img_width)
 
     # 0.7628205418586731
-    train_x, train_y = load_data(train_dir, img_dims)
+    train_x, train_y = load_and_preprocess_data(train_dir, img_dims)
     plt.imshow(train_x[4][:, :, 0])
-    plt.title('Before Mixup')
-    plt.show()
-    train_x, train_y = mixup_data(train_x, train_y, 4)
-    plt.imshow(train_x[4][:, :, 0])
-    plt.title('After Mixup')
+    plt.title('Before CutMix')
     plt.show()
 
-    val_x, val_y = load_data(validation_dir, img_dims)
-    test_x, test_y = load_data(test_dir, img_dims)
+    train_x, train_y = cutmix(train_x, train_y, 0.5)
+
+    plt.imshow(train_x[4][:, :, 0])
+    plt.title('After CutMix')
+    plt.show()
+
+    val_x, val_y = load_and_preprocess_data(validation_dir, img_dims)
+    test_x, test_y = load_and_preprocess_data(test_dir, img_dims)
 
     gen = ImageDataGenerator(
         featurewise_center=False,  # set input mean to 0 over the dataset
@@ -150,8 +136,8 @@ def setup_model():
 
     gen.fit(train_x)
 
-    train_gen = gen.flow(train_x, train_y, batch_size)
-    val_gen = gen.flow(val_x, val_y, batch_size)
+    train_gen = gen.flow(train_x, train_y, batch_size, seed=1337)
+    val_gen = gen.flow(val_x, val_y, batch_size, seed=1337)
 
     model = Sequential([
         Conv2D(16, 3, padding='same', activation='relu',
