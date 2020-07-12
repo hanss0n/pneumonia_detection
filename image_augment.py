@@ -1,5 +1,8 @@
 import numpy as np
+import torch
 
+
+# TODO: move each augmentation method to its own class
 
 # DISCLAIMER: Code for mixup-implementation from: https://www.kaggle.com/qqgeogor/keras-nn-mixup/comments#480542
 def mixup(x, y, alpha=1.0, seed=1337):
@@ -54,3 +57,29 @@ def __rand_bbox(size, lam, seed=1337):
     bby2 = np.clip(cy + cut_h // 2, 0, H)
 
     return bbx1, bby1, bbx2, bby2
+
+
+# DISCLAIMER: Code inspired by: https://github.com/changewOw/Cutout-numpy
+def cutout(x_cut, y_cut, n_holes=10, seed=1337, img_height=150, img_width=150, max_height=15.0, min_height=5.0,
+           max_width=15.0, min_width=5.0):
+    if seed is not None:
+        np.random.seed(seed)
+
+    shuffled_data = np.ones((img_height, img_width, 1), dtype=np.int32)
+    # TODO: add random color fill/hole
+    shuffled_data.fill(0)
+
+    for n in range(n_holes):
+        y = np.random.randint(img_height)
+        x = np.random.randint(img_width)
+
+        h_l = np.random.randint(min_height, max_height + 1)
+        w_l = np.random.randint(min_width, max_width + 1)
+
+        y1 = np.clip(y - h_l // 2, 0, img_height)
+        y2 = np.clip(y + h_l // 2, 0, img_height)
+        x1 = np.clip(x - w_l // 2, 0, img_width)
+        x2 = np.clip(x + w_l // 2, 0, img_width)
+        x_cut[:, x1:x2, y1:y2, :] = shuffled_data[x1:x2, y1:y2]
+
+    return x_cut, y_cut

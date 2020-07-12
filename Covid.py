@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import os
 import cv2
 from tensorflow.keras.layers import Dropout
-from image_augment import mixup, cutmix
+from image_augment import mixup, cutmix, cutout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 # For ease of use
@@ -102,12 +102,11 @@ def setup_model(augmentation='none', alpha=4.0):
 
     # Define parameters for our network
     batch_size = 16
-    epochs = 3
+    epochs = 12
     img_height = 150
     img_width = 150
     img_dims = (img_height, img_width)
 
-    # 0.7628205418586731
     train_x, train_y = load_and_preprocess_data(train_dir, img_dims)
 
     if augmentation == 'cutmix':
@@ -125,6 +124,14 @@ def setup_model(augmentation='none', alpha=4.0):
         train_x, train_y = mixup(train_x, train_y, alpha, seed=seed)
         plt.imshow(train_x[4][:, :, 0])
         plt.title('After Mixup')
+        plt.show()
+    if augmentation == 'cutout':
+        plt.imshow(train_x[4][:, :, 0])
+        plt.title('Before Cutout')
+        plt.show()
+        train_x, train_y = cutout(train_x, train_y, 10)
+        plt.imshow(train_x[4][:, :, 0])
+        plt.title('After Cutout')
         plt.show()
 
     val_x, val_y = load_and_preprocess_data(validation_dir, img_dims)
@@ -208,4 +215,4 @@ def plot_model(results):
 
 
 if __name__ == '__main__':
-    setup_model(augmentation='mixup', alpha=2)
+    setup_model(augmentation='cutout', alpha=4)
