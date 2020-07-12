@@ -1,17 +1,16 @@
+seed = 123
+import numpy as np
+
+np.random.seed(seed)
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 import matplotlib.pyplot as plt
 import os
-import numpy as np
 import cv2
 from tensorflow.keras.layers import Dropout
 from image_augment import mixup, cutmix
-
-from tensorflow.keras.preprocessing import image_dataset_from_directory
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-
-seed = 123
 
 # For ease of use
 # TODO: should probably be moved to get_data function
@@ -92,7 +91,7 @@ def load_and_preprocess_data(data_dir, img_dims):
     return train_x, train_y
 
 
-def setup_model(augmentation='mixup', alpha=4):
+def setup_model(augmentation='none', alpha=4.0):
     # set seeds to see actual improvements
     tf.random.set_seed(seed)
     tf.random.uniform([1], seed=seed)  # doesn't work?
@@ -103,7 +102,7 @@ def setup_model(augmentation='mixup', alpha=4):
 
     # Define parameters for our network
     batch_size = 16
-    epochs = 12
+    epochs = 3
     img_height = 150
     img_width = 150
     img_dims = (img_height, img_width)
@@ -144,8 +143,9 @@ def setup_model(augmentation='mixup', alpha=4):
         horizontal_flip=True,  # randomly flip images
         vertical_flip=False)  # randomly flip images
 
-    gen.fit(train_x)
+    gen.fit(train_x, seed=seed)
 
+    # TODO: fix random seed here
     train_gen = gen.flow(train_x, train_y, batch_size, seed=seed)
     val_gen = gen.flow(val_x, val_y, batch_size, seed=seed)
 
@@ -173,7 +173,7 @@ def setup_model(augmentation='mixup', alpha=4):
         steps_per_epoch=total_train // batch_size,
         epochs=epochs,
         validation_data=val_gen,
-        validation_steps=total_val // batch_size
+        validation_steps=total_val // batch_size, shuffle=False
     )
 
     test_loss, test_score = model.evaluate(test_x, test_y, batch_size=batch_size)
@@ -208,4 +208,4 @@ def plot_model(results):
 
 
 if __name__ == '__main__':
-    setup_model(augmentation='cutmix', alpha=1)
+    setup_model(augmentation='mixup', alpha=2)
