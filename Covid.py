@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 import os
 import cv2
 from tensorflow.keras.layers import Dropout
-from image_augment import mixup, cutmix, cutout
+from util.augmentors import mixup, cutmix, cutout, cutmix_mixup
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 # For ease of use
-# TODO: should probably be moved to get_data function
+# TODO: should probably be moved to data_loader
 path = 'dataset/kaggle/chest_xray/'
 normal = 'NORMAL'
 pneumonia = 'PNEUMONIA'
@@ -59,6 +59,7 @@ def summarize_dataset(verbose=True):
     return total_train, total_val, total_test
 
 
+# TODO: move to data_loader
 labels = ['PNEUMONIA', 'NORMAL']
 img_size = 150
 
@@ -91,7 +92,7 @@ def load_and_preprocess_data(data_dir, img_dims):
     return train_x, train_y
 
 
-def setup_model(augmentation='none', alpha=4.0):
+def setup_model():
     # set seeds to see actual improvements
     tf.random.set_seed(seed)
     tf.random.uniform([1], seed=seed)  # doesn't work?
@@ -106,36 +107,22 @@ def setup_model(augmentation='none', alpha=4.0):
     img_height = 150
     img_width = 150
     img_dims = (img_height, img_width)
+    augmentation = 'mixup'
+    alpha = 1
+    num_holes = 1
 
     train_x, train_y = load_and_preprocess_data(train_dir, img_dims)
-
-    if augmentation == 'cutmix':
-        plt.imshow(train_x[4][:, :, 0])
-        plt.title('Before CutMix')
-        plt.show()
-        train_x, train_y = cutmix(train_x, train_y, alpha, seed=seed)
-        plt.imshow(train_x[4][:, :, 0])
-        plt.title('After CutMix')
-        plt.show()
-    if augmentation == 'mixup':
-        plt.imshow(train_x[4][:, :, 0])
-        plt.title('Before Mixup')
-        plt.show()
-        train_x, train_y = mixup(train_x, train_y, alpha, seed=seed)
-        plt.imshow(train_x[4][:, :, 0])
-        plt.title('After Mixup')
-        plt.show()
-    if augmentation == 'cutout':
-        plt.imshow(train_x[4][:, :, 0])
-        plt.title('Before Cutout')
-        plt.show()
-        train_x, train_y = cutout(train_x, train_y, 10)
-        plt.imshow(train_x[4][:, :, 0])
-        plt.title('After Cutout')
-        plt.show()
-
     val_x, val_y = load_and_preprocess_data(validation_dir, img_dims)
     test_x, test_y = load_and_preprocess_data(test_dir, img_dims)
+
+    if augmentation == 'mixup':
+        train_x, train_y = mixup(train_x, train_y, alpha, seed=seed, show_sample=True)
+    if augmentation == 'cutmix':
+        train_x, train_y = cutmix(train_x, train_y, alpha, seed=seed, show_sample=True)
+    if augmentation == 'cutout':
+        train_x, train_y = cutout(train_x, train_y, n_holes=num_holes, show_sample=True)
+    if augmentation == 'cutmix_mixup':
+        train_x, train_y = cutmix_mixup(train_x, train_y, alpha)
 
     gen = ImageDataGenerator(
         featurewise_center=False,  # set input mean to 0 over the dataset
@@ -148,11 +135,11 @@ def setup_model(augmentation='none', alpha=4.0):
         width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
         height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
         horizontal_flip=True,  # randomly flip images
-        vertical_flip=False)  # randomly flip images
+        vertical_flip=False  # randomly flip images
+    )
 
-    gen.fit(train_x, seed=seed)
+    # gen.fit(train_x, seed=seed)
 
-    # TODO: fix random seed here
     train_gen = gen.flow(train_x, train_y, batch_size, seed=seed)
     val_gen = gen.flow(val_x, val_y, batch_size, seed=seed)
 
@@ -215,4 +202,4 @@ def plot_model(results):
 
 
 if __name__ == '__main__':
-    setup_model(augmentation='cutout', alpha=4)
+    setup_model()

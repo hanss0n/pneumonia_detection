@@ -1,0 +1,127 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+# DISCLAIMER: Code for mixup-implementation from: https://www.kaggle.com/qqgeogor/keras-nn-mixup/comments#480542
+def mixup(features, labels, alpha=1.0, seed=1337, show_sample=False):
+    if seed is not None:
+        np.random.seed(seed)
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else:
+        lam = 1
+    index = np.random.choice(np.arange(len(features)))
+    old = features[index][:, :, 0].copy()
+
+    sample_size = features.shape[0]
+    index_array = np.arange(sample_size)
+    np.random.shuffle(index_array)
+
+    mixed_features = lam * features + (1 - lam) * features[index_array]
+    mixed_labels = (lam * labels) + ((1 - lam) * labels[index_array])
+    if show_sample:
+        new = mixed_features[index][:, :, 0]
+        __show_sample(old, new, 'mixup')
+    return mixed_features, mixed_labels
+
+
+# DISCLAIMER: Code for CutMix implementation inspired by: https://github.com/airplane2230/keras_cutmix
+def cutmix(features, labels, alpha=1.0, seed=1337, show_sample=False):
+    if seed is not None:
+        np.random.seed(seed)
+
+    index = np.random.choice(np.arange(len(features)))
+    old = features[index][:, :, 0].copy()
+    batch_size = len(features)
+    indices = np.random.permutation(batch_size)
+    shuffled_data = features[indices]
+
+    lam = np.random.beta(alpha, alpha)
+    lam = np.array(lam)
+    bbx1, bby1, bbx2, bby2 = __rand_bbox(features.shape, lam, seed=seed)
+    features[:, bbx1:bbx2, bby1:bby2, :] = shuffled_data[:, bbx1:bbx2, bby1:bby2, :]
+
+    if show_sample:
+        new = features[index][:, :, 0]
+        __show_sample(old, new, 'cutmix')
+
+    return features, labels
+
+
+def __rand_bbox(size, lam, seed=1337):
+    if seed is not None:
+        np.random.seed(seed)
+    img_width = size[1]
+    img_height = size[2]
+    cut_rat = np.sqrt(1. - lam)
+    cut_w = np.int(img_width * cut_rat)
+    cut_h = np.int(img_height * cut_rat)
+
+    # uniform
+    cx = np.random.randint(img_width)
+    cy = np.random.randint(img_height)
+
+    bbx1 = np.clip(cx - cut_w // 2, 0, img_width)
+    bby1 = np.clip(cy - cut_h // 2, 0, img_height)
+    bbx2 = np.clip(cx + cut_w // 2, 0, img_width)
+    bby2 = np.clip(cy + cut_h // 2, 0, img_height)
+
+    return bbx1, bby1, bbx2, bby2
+
+
+# DISCLAIMER: Code inspired by: https://github.com/changewOw/Cutout-numpy
+def cutout(features, labels, n_holes=1, seed=1337, img_height=150, img_width=150, max_height=40.0, min_height=20.0,
+           max_width=40.0, min_width=20.0, show_sample=False):
+    if seed is not None:
+        np.random.seed(seed)
+
+    index = np.random.choice(np.arange(len(features)))
+    old = features[index][:, :, 0].copy()
+
+    shuffled_data = np.ones((img_height, img_width, 1), dtype=np.int32)
+    # TODO: add random color fill/hole
+    shuffled_data.fill(0)
+
+    for n in range(n_holes):
+        y = np.random.randint(img_height)
+        x = np.random.randint(img_width)
+
+        h_l = np.random.randint(min_height, max_height + 1)
+        w_l = np.random.randint(min_width, max_width + 1)
+
+        y1 = np.clip(y - h_l // 2, 0, img_height)
+        y2 = np.clip(y + h_l // 2, 0, img_height)
+        x1 = np.clip(x - w_l // 2, 0, img_width)
+        x2 = np.clip(x + w_l // 2, 0, img_width)
+        features[:, x1:x2, y1:y2, :] = shuffled_data[x1:x2, y1:y2]
+
+    if show_sample:
+        new = features[index][:, :, 0]
+        __show_sample(old, new, 'cutout')
+
+    return features, labels
+
+
+def cutmix_mixup(features, labels, alpha=1, seed=1337):
+    if seed is not None:
+        np.random.seed(seed)
+    mixup_x = features[:len(features) // 2]
+    mixup_y = labels[:len(labels) // 2]
+    cutmix_x = features[len(features) // 2:]
+    cutmix_y = labels[len(labels) // 2:]
+
+    mixup_x, mixup_y = mixup(mixup_x, mixup_y, 2)
+    cutmix_x, cutmix_y = cutmix(cutmix_x, cutmix_y, 4)
+
+    features, labels = np.concatenate([mixup_x, cutmix_x]), np.concatenate([mixup_y, cutmix_y])
+    p = np.random.permutation(len(features))
+    return features[p], labels[p]
+
+
+def __show_sample(old, new, aug_method):
+    plt.imshow(old)
+    plt.title('Before {}'.format(aug_method))
+    plt.show()
+    plt.imshow(new)
+    plt.title('After {}'.format(aug_method))
+    plt.show()
