@@ -107,7 +107,19 @@ def setup_model():
     img_height = 150
     img_width = 150
     img_dims = (img_height, img_width)
-    augmentation = 'mixup'
+
+    # none: 0.7131410241127014
+    # mixup: 0.7932692170143127
+    # cutmix: 0.8349359035491943
+    # cutmix_mixup: 0.8301281929016113
+
+    #aug:
+    # width_shift_range=0.1,
+    # height_shift_range=0.1,
+    # horizontal_flip=True
+
+
+    augmentation = 'cutmix'
     alpha = 1
     num_holes = 1
 
@@ -125,20 +137,14 @@ def setup_model():
         train_x, train_y = cutmix_mixup(train_x, train_y, alpha)
 
     gen = ImageDataGenerator(
-        featurewise_center=False,  # set input mean to 0 over the dataset
-        samplewise_center=False,  # set each sample mean to 0
-        featurewise_std_normalization=False,  # divide inputs by std of the dataset
-        samplewise_std_normalization=False,  # divide each input by its std
-        zca_whitening=False,  # apply ZCA whitening
-        rotation_range=30,  # randomly rotate images in the range (degrees, 0 to 180)
+        rotation_range=5,  # randomly rotate images in the range (degrees, 0 to 180)
         zoom_range=0.2,  # Randomly zoom image
         width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
         height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
         horizontal_flip=True,  # randomly flip images
-        vertical_flip=False  # randomly flip images
     )
 
-    # gen.fit(train_x, seed=seed)
+    gen.fit(train_x, seed=seed)
 
     train_gen = gen.flow(train_x, train_y, batch_size, seed=seed)
     val_gen = gen.flow(val_x, val_y, batch_size, seed=seed)
