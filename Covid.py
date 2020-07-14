@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import os
 import cv2
 from tensorflow.keras.layers import Dropout
-from util.augmentors import mixup, cutmix, cutout, cutmix_mixup
+from util.augmentors import mixup, cutmix, cutout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 # For ease of use
@@ -118,7 +118,7 @@ def setup_model():
     # height_shift_range=0.1,
     # horizontal_flip=True
 
-    augmentation = 'cutout'
+    augmentation = 'cutmix'
     alpha = 1
     num_holes = 5
 
