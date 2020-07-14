@@ -70,19 +70,18 @@ def __rand_bbox(size, lam, seed=1337):
 
 
 # DISCLAIMER: Code inspired by: https://github.com/changewOw/Cutout-numpy
-def cutout(features, labels, n_holes=1, seed=1337, img_height=150, img_width=150, max_height=40.0, min_height=20.0,
-           max_width=40.0, min_width=20.0, show_sample=False):
+def cutout(features, labels, n_holes=1, seed=1337, img_height=150, img_width=150, max_height=15.0, min_height=5.0,
+           max_width=15.0, min_width=5.0, show_sample=False):
     if seed is not None:
         np.random.seed(seed)
 
     index = np.random.choice(np.arange(len(features)))
     old = features[index][:, :, 0].copy()
 
-    shuffled_data = np.ones((img_height, img_width, 1), dtype=np.int32)
-    # TODO: add random color fill/hole
-    shuffled_data.fill(0)
+    shuffled_data = np.ones((img_height, img_width, 1), dtype='float32')
 
     for n in range(n_holes):
+        shuffled_data.fill(np.random.uniform(0.0, 1.0))
         y = np.random.randint(img_height)
         x = np.random.randint(img_width)
 
@@ -100,22 +99,6 @@ def cutout(features, labels, n_holes=1, seed=1337, img_height=150, img_width=150
         __show_sample(old, new, 'cutout')
 
     return features, labels
-
-
-def cutmix_mixup(features, labels, alpha=1, seed=1337):
-    if seed is not None:
-        np.random.seed(seed)
-    mixup_x = features[:len(features) // 2]
-    mixup_y = labels[:len(labels) // 2]
-    cutmix_x = features[len(features) // 2:]
-    cutmix_y = labels[len(labels) // 2:]
-
-    mixup_x, mixup_y = mixup(mixup_x, mixup_y, 2)
-    cutmix_x, cutmix_y = cutmix(cutmix_x, cutmix_y, 4)
-
-    features, labels = np.concatenate([mixup_x, cutmix_x]), np.concatenate([mixup_y, cutmix_y])
-    p = np.random.permutation(len(features))
-    return features[p], labels[p]
 
 
 def __show_sample(old, new, aug_method):

@@ -113,15 +113,14 @@ def setup_model():
     # cutmix: 0.8349359035491943
     # cutmix_mixup: 0.8301281929016113
 
-    #aug:
+    # aug:
     # width_shift_range=0.1,
     # height_shift_range=0.1,
     # horizontal_flip=True
 
-
-    augmentation = 'cutmix'
+    augmentation = 'cutout'
     alpha = 1
-    num_holes = 1
+    num_holes = 5
 
     train_x, train_y = load_and_preprocess_data(train_dir, img_dims)
     val_x, val_y = load_and_preprocess_data(validation_dir, img_dims)
@@ -133,8 +132,6 @@ def setup_model():
         train_x, train_y = cutmix(train_x, train_y, alpha, seed=seed, show_sample=True)
     if augmentation == 'cutout':
         train_x, train_y = cutout(train_x, train_y, n_holes=num_holes, show_sample=True)
-    if augmentation == 'cutmix_mixup':
-        train_x, train_y = cutmix_mixup(train_x, train_y, alpha)
 
     gen = ImageDataGenerator(
         rotation_range=5,  # randomly rotate images in the range (degrees, 0 to 180)
