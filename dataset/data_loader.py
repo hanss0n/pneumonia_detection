@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import tqdm
 import sys
+from PIL import Image
 
 
 def load_kaggle():
@@ -106,6 +107,24 @@ def get_data(img_dims, labels):
     test_y = np.load(preprocessed_path + 'test_y.npy')
 
     return (train_x, train_y), (val_x, val_y), (test_x, test_y)
+
+
+def count_color_modes(images):
+    grey_scale, rgb, rgba, i = 0, 0, 0, 0
+    for im in images:
+        img = Image.open(im)
+        if img.mode == 'L':
+            grey_scale += 1
+        if img.mode == 'RGB':
+            rgb += 1
+        if img.mode == 'RGBA':
+            rgba += 1
+        i = i + 1
+
+        print('All: ', i)
+        print('Grayscale: ', grey_scale)
+        print('RGB: ', rgb)
+        print('RGBA: ', rgba)
 
 
 if __name__ == '__main__':
