@@ -38,9 +38,9 @@ def setup_model():
     total_val = len(val_x)
 
     if augmentation == 'mixup':
-        train_x, train_y = mixup(train_x, train_y, alpha, seed=seed, show_sample=False)
+        train_x, train_y = mixup(train_x, train_y, alpha, show_sample=False)
     if augmentation == 'cutmix':
-        train_x, train_y = cutmix(train_x, train_y, alpha, seed=seed, show_sample=False)
+        train_x, train_y = cutmix(train_x, train_y, alpha, show_sample=False)
     if augmentation == 'cutout':
         train_x, train_y = cutout(train_x, train_y, n_holes=num_holes, show_sample=False)
 
@@ -49,7 +49,8 @@ def setup_model():
         zoom_range=0.2,  # Randomly zoom image
         width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
         height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
-        horizontal_flip=True, preprocessing_function=single_cutout  # randomly flip images
+        horizontal_flip=True,
+        preprocessing_function=single_cutout  # randomly flip images
     )
 
     gen.fit(train_x, seed=seed)
@@ -83,6 +84,7 @@ def setup_model():
         validation_data=val_gen,
         validation_steps=total_val // batch_size,
         shuffle=False
+
     )
 
     test_loss, test_score = model.evaluate(test_x, test_y, batch_size=batch_size)
