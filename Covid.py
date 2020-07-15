@@ -12,10 +12,6 @@ from util.augmentors import mixup, cutmix, cutout, single_cutout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
-# For ease of use
-# TODO: should probably be moved to data_loader
-
-
 def setup_model():
     # set seeds to see actual improvements
     tf.random.set_seed(seed)
@@ -45,12 +41,12 @@ def setup_model():
         train_x, train_y = cutout(train_x, train_y, n_holes=num_holes, show_sample=False)
 
     gen = ImageDataGenerator(
-        rotation_range=5,  # randomly rotate images in the range (degrees, 0 to 180)
-        zoom_range=0.2,  # Randomly zoom image
-        width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
-        height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
+        rotation_range=5,
+        zoom_range=0.2,
+        width_shift_range=0.1,
+        height_shift_range=0.1,
         horizontal_flip=True,
-        preprocessing_function=single_cutout  # randomly flip images
+        preprocessing_function=single_cutout  
     )
 
     gen.fit(train_x, seed=seed)

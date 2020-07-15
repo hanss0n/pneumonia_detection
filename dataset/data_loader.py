@@ -7,6 +7,7 @@ import numpy as np
 import tqdm
 import sys
 
+
 def load_kaggle():
     if not os.path.exists(os.path.join('kaggle', 'chest_xray')):
         dataset = 'paultimothymooney/chest-xray-pneumonia'
