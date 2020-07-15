@@ -101,6 +101,27 @@ def cutout(features, labels, n_holes=1, seed=1337, img_height=150, img_width=150
     return features, labels
 
 
+def single_cutout(img):
+    img_height = 150
+    img_width = 150
+
+    shuffled_data = np.ones((150, 150, 1), dtype='float32')
+    for n in range(3):
+        shuffled_data.fill(np.random.uniform(0.0, 1.0))
+        y = np.random.randint(img_height)
+        x = np.random.randint(img_width)
+
+        h_l = np.random.randint(5.0, 20 + 1)
+        w_l = np.random.randint(3, 20 + 1)
+
+        y1 = np.clip(y - h_l // 2, 0, img_height)
+        y2 = np.clip(y + h_l // 2, 0, img_height)
+        x1 = np.clip(x - w_l // 2, 0, img_width)
+        x2 = np.clip(x + w_l // 2, 0, img_width)
+        img[x1:x2, y1:y2] = shuffled_data[x1:x2, y1:y2]
+    return img
+
+
 def __show_sample(old, new, aug_method):
     plt.imshow(old)
     plt.title('Before {}'.format(aug_method))
