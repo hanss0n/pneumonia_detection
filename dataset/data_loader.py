@@ -7,10 +7,6 @@ import numpy as np
 import tqdm
 import sys
 
-
-# TODO: Move 38 images from test to validation
-# TODO: Move 532 images from train to validation
-
 def load_kaggle():
     if not os.path.exists(os.path.join('kaggle', 'chest_xray')):
         dataset = 'paultimothymooney/chest-xray-pneumonia'

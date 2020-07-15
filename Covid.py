@@ -8,7 +8,7 @@ from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 import matplotlib.pyplot as plt
 from dataset.data_loader import get_data
 from tensorflow.keras.layers import Dropout
-from util.augmentors import mixup, cutmix, cutout
+from util.augmentors import mixup, cutmix, cutout, single_cutout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
@@ -24,7 +24,7 @@ def setup_model():
 
     # Define parameters for our network
     batch_size = 16
-    epochs = 12
+    epochs = 28
     img_height = 150
     img_width = 150
     img_dims = (img_height, img_width)
@@ -38,18 +38,18 @@ def setup_model():
     total_val = len(val_x)
 
     if augmentation == 'mixup':
-        train_x, train_y = mixup(train_x, train_y, alpha, seed=seed, show_sample=True)
+        train_x, train_y = mixup(train_x, train_y, alpha, seed=seed, show_sample=False)
     if augmentation == 'cutmix':
-        train_x, train_y = cutmix(train_x, train_y, alpha, seed=seed, show_sample=True)
+        train_x, train_y = cutmix(train_x, train_y, alpha, seed=seed, show_sample=False)
     if augmentation == 'cutout':
-        train_x, train_y = cutout(train_x, train_y, n_holes=num_holes, show_sample=True)
+        train_x, train_y = cutout(train_x, train_y, n_holes=num_holes, show_sample=False)
 
     gen = ImageDataGenerator(
         rotation_range=5,  # randomly rotate images in the range (degrees, 0 to 180)
         zoom_range=0.2,  # Randomly zoom image
         width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
         height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
-        horizontal_flip=True,  # randomly flip images
+        horizontal_flip=True, preprocessing_function=single_cutout  # randomly flip images
     )
 
     gen.fit(train_x, seed=seed)
@@ -61,12 +61,12 @@ def setup_model():
         Conv2D(16, 3, padding='same', activation='relu',
                input_shape=(img_height, img_width, 1)),
         MaxPooling2D(),
-        Dropout(0.2),
+        Dropout(0.1),
         Conv2D(32, 3, padding='same', activation='relu'),
         MaxPooling2D(),
         Conv2D(64, 3, padding='same', activation='relu'),
         MaxPooling2D(),
-        Dropout(0.2),
+        Dropout(0.1),
         Flatten(),
         Dense(512, activation='relu'),
         Dense(1)
