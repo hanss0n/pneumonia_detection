@@ -20,7 +20,7 @@ def setup_model():
 
     # Define parameters for our network
     batch_size = 16
-    epochs = 28
+    epochs = 1
     img_height = 150
     img_width = 150
     img_dims = (img_height, img_width)
@@ -46,7 +46,7 @@ def setup_model():
         width_shift_range=0.1,
         height_shift_range=0.1,
         horizontal_flip=True,
-        preprocessing_function=single_cutout  
+        preprocessing_function=single_cutout
     )
 
     gen.fit(train_x, seed=seed)
