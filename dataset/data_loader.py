@@ -4,6 +4,8 @@ import random
 import shutil
 import cv2
 import numpy as np
+import tqdm
+import sys
 
 
 # TODO: Move 38 images from test to validation
@@ -51,12 +53,12 @@ def load_and_preprocess_data(data_dir, img_dims, labels):
     data = []
 
     dir_len = sum([len(files) for r, d, files in os.walk(data_dir)])
-    print("Preprocessing {} images in {}.".format(dir_len, data_dir))
+    print("Processing {} images in {}.".format(dir_len, data_dir))
 
     for label in labels:
         path = os.path.join(data_dir, label)
         class_num = labels.index(label)
-        for img in os.listdir(path):
+        for img in tqdm.tqdm(os.listdir(path), desc='{}'.format(label), file=sys.stdout):
             try:
                 img_arr = cv2.imread(os.path.join(path, img), cv2.IMREAD_GRAYSCALE)
                 resized_arr = cv2.resize(img_arr, (img_height, img_width))  # Reshaping images to preferred size
@@ -74,7 +76,6 @@ def load_and_preprocess_data(data_dir, img_dims, labels):
     train_x = np.array(train_x) / 255
     train_x = train_x.reshape(-1, img_height, img_width, 1)
     train_y = np.array(train_y)
-
     return train_x, train_y
 
 
