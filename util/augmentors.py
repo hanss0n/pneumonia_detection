@@ -33,7 +33,7 @@ def cutmix(features, labels, alpha=1.0, show_sample=False):
 
     lam = np.random.beta(alpha, alpha)
     lam = np.array(lam)
-    bbx1, bby1, bbx2, bby2 = __cutmix_bbox(features.shape, lam)
+    bbx1, bby1, bbx2, bby2 = __cutmix_box(features.shape, lam)
     features[:, bbx1:bbx2, bby1:bby2, :] = shuffled_data[:, bbx1:bbx2, bby1:bby2, :]
 
     if show_sample:
@@ -69,7 +69,7 @@ def single_cutout(img, n_holes=3, img_height=150, img_width=150, max_height=20.0
     return img
 
 
-def __cutmix_bbox(size, lam):
+def __cutmix_box(size, lam):
     img_width = size[1]
     img_height = size[2]
     cut_rat = np.sqrt(1. - lam)

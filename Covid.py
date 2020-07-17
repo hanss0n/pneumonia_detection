@@ -10,6 +10,7 @@ from dataset.data_loader import get_data
 from tensorflow.keras.layers import Dropout
 from util.augmentors import mixup, cutmix, cutout, single_cutout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.callbacks import ReduceLROnPlateau, ModelCheckpoint
 
 
 def setup_model():
@@ -19,13 +20,16 @@ def setup_model():
     labels = ['NORMAL', 'PNEUMONIA']
 
     # Define parameters for our network
-    batch_size = 16
-    epochs = 1
+    batch_size = 64
+    epochs = 20
     img_height = 150
     img_width = 150
     img_dims = (img_height, img_width)
+    reduce_lr = ReduceLROnPlateau(monitor='accuracy', factor=0.2,
+                                  patience=5, min_lr=0.00001, cooldown=3, verbose=1)
 
     augmentation = 'cutmix'
+
     alpha = 1
     num_holes = 5
 
@@ -46,7 +50,7 @@ def setup_model():
         width_shift_range=0.1,
         height_shift_range=0.1,
         horizontal_flip=True,
-        preprocessing_function=single_cutout
+        # preprocessing_function=single_cutout
     )
 
     gen.fit(train_x, seed=seed)
@@ -58,20 +62,27 @@ def setup_model():
         Conv2D(16, 3, padding='same', activation='relu',
                input_shape=(img_height, img_width, 1)),
         MaxPooling2D(),
-        Dropout(0.1),
+        Dropout(0.2),
         Conv2D(32, 3, padding='same', activation='relu'),
         MaxPooling2D(),
         Conv2D(64, 3, padding='same', activation='relu'),
         MaxPooling2D(),
-        Dropout(0.1),
+        Dropout(0.2),
         Flatten(),
         Dense(512, activation='relu'),
         Dense(1)
     ])
 
+    model.summary()
+    path = 'saved_models/{}_weights'.format(augmentation)
+
+    # model.load_weights(path) # uncomment to load weights from last checkpoint
     model.compile(optimizer='adam',
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                   metrics=['accuracy'])
+
+    checkpoint = ModelCheckpoint(filepath=path, save_weights_only=True, monitor='val_accuracy', mode='max',
+                                 save_best_only=True, verbose=1)
 
     history = model.fit(
         train_gen,
@@ -79,9 +90,10 @@ def setup_model():
         epochs=epochs,
         validation_data=val_gen,
         validation_steps=total_val // batch_size,
-        shuffle=False
+        shuffle=False, callbacks=[reduce_lr, checkpoint]
 
     )
+    model.load_weights(path)  # load weights for best epoch
 
     test_loss, test_score = model.evaluate(test_x, test_y, batch_size=batch_size)
     print("Loss on test set: ", test_loss)
