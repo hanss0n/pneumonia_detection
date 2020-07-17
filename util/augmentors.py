@@ -104,7 +104,9 @@ def __cutout_box(shuffled_data, img_height, img_width, max_height, min_height, m
 def __show_sample(old, new, aug_method):
     plt.imshow(old)
     plt.title('Before {}'.format(aug_method))
+    plt.savefig('images/before_{}.png'.format(aug_method))
     plt.show()
     plt.imshow(new)
     plt.title('After {}'.format(aug_method))
+    plt.savefig('images/after_{}.png'.format(aug_method))
     plt.show()
