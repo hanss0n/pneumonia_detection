@@ -21,18 +21,18 @@ as combinations of these.
 ![After Cutmix](images/after_cutmix.png)
 
 
-[Link to paper]()
+[Link to paper](https://arxiv.org/abs/1905.04899)
 
 ### Mixup
 ![Before Mixup](images/before_mixup.png)
 ![After Mixup](images/after_mixup.png)
 
-[Link to paper]()
+[Link to paper](https://arxiv.org/abs/1710.09412)
 
 ### Cutout
 ![Before Cutout](images/before_cutout.png)
 ![After Cutout](images/after_cutout.png)
 
-[Link to paper]()
+[Link to paper](https://arxiv.org/abs/1708.04552)
 
   
