@@ -17,16 +17,22 @@ The data augmentation methods that were tested were Cutmix, Mixup and Cutout, as
 as combinations of these. 
 
 ### Cutmix
-![Before cutmix](images/before_cutmix.png)
-![After cutmix](images/after_cutmix.png)
+![Before Cutmix](images/before_cutmix.png)
+![After Cutmix](images/after_cutmix.png)
 
 
 [Link to paper]()
 
 ### Mixup
+![Before Mixup](images/before_mixup.png)
+![After Mixup](images/after_mixup.png)
+
 [Link to paper]()
 
 ### Cutout
+![Before Cutout](images/before_cutout.png)
+![After Cutout](images/after_cutout.png)
+
 [Link to paper]()
 
   
