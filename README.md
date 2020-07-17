@@ -1,4 +1,4 @@
-# Pneumonia Detector
+# Pneumonia Detection
 This project explores diagnosing pneumonia through chest x-ray images with the help of deep 
 learning (TensorFlow & Keras) and various data augmentation methods. The dataset used for this project is 
 part of a Kaggle challenge and can be found [here](https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia).
