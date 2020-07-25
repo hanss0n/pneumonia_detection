@@ -6,9 +6,9 @@ import cv2
 import numpy as np
 import tqdm
 import sys
-from PIL import Image
+import image
 
-
+# loads dataset from kaggle
 def load_kaggle():
     if not os.path.exists(os.path.join('kaggle', 'chest_xray')):
         dataset = 'paultimothymooney/chest-xray-pneumonia'
@@ -17,7 +17,6 @@ def load_kaggle():
         kaggle.api.dataset_download_files(dataset=dataset, path=target, unzip=True, quiet=False)
     else:
         print('The Kaggle dataset is already downloaded')
-
 
 def re_partition_kaggle():
     num_to_move = 42
@@ -64,33 +63,43 @@ def load_and_preprocess_data(data_dir, img_dims, labels):
 
             except Exception as e:
                 print(e)
-    data = np.array(data)
-    train_x = []
-    train_y = []
+    data = np.array(data,dtype=object)
+    set_x = []
+    set_y = []
     for img, label in data:
-        train_x.append(img)
-        train_y.append(label)
+        set_x.append(img)
+        set_y.append(label)
 
-    train_x = np.array(train_x) / 255
-    train_x = train_x.reshape(-1, img_height, img_width, 1)
-    train_y = np.array(train_y)
-    return train_x, train_y
+    set_x = np.array(set_x) / 255
+    set_x = set_x.reshape(-1, img_height, img_width, 1)
+    set_y = np.array(set_y)
+    return set_x, set_y
 
 
-def get_data(img_dims, labels):
+def get_data(img_dims, labels,process):
     preprocessed_path = 'dataset/preprocessed/'
-    if not os.path.isdir(preprocessed_path):
+    if process:
+        # if not os.path.isdir(preprocessed_path):
+        #     raw_path = 'dataset/kaggle/chest_xray/'
+        #     if not os.path.isdir(raw_path):
+        #         load_kaggle()
+
+        os.remove(preprocessed_path + 'train_x.npy')
+        os.remove(preprocessed_path + 'train_y.npy')
+        os.remove(preprocessed_path + 'val_x.npy')
+        os.remove(preprocessed_path + 'val_y.npy')
+        os.remove(preprocessed_path + 'test_x.npy')
+        os.remove(preprocessed_path + 'test_y.npy')
+
         raw_path = 'dataset/kaggle/chest_xray/'
-        if not os.path.isdir(raw_path):
-            load_kaggle()
 
         train_dir = os.path.join(raw_path, 'train')
         test_dir = os.path.join(raw_path, 'test')
         validation_dir = os.path.join(raw_path, 'val')
+
         (train_x, train_y) = load_and_preprocess_data(train_dir, img_dims, labels)
         (val_x, val_y) = load_and_preprocess_data(validation_dir, img_dims, labels)
         (test_x, test_y) = load_and_preprocess_data(test_dir, img_dims, labels)
-        os.mkdir(preprocessed_path)
 
         np.save(preprocessed_path + 'train_x', train_x)
         np.save(preprocessed_path + 'train_y', train_y)
