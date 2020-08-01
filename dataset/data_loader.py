@@ -84,12 +84,13 @@ def get_data(img_dims, labels,process):
         #     if not os.path.isdir(raw_path):
         #         load_kaggle()
 
-        os.remove(preprocessed_path + 'train_x.npy')
-        os.remove(preprocessed_path + 'train_y.npy')
-        os.remove(preprocessed_path + 'val_x.npy')
-        os.remove(preprocessed_path + 'val_y.npy')
-        os.remove(preprocessed_path + 'test_x.npy')
-        os.remove(preprocessed_path + 'test_y.npy')
+        if  os.path.exists(preprocessed_path + 'train_x.npy'):
+            os.remove(preprocessed_path + 'train_x.npy')
+            os.remove(preprocessed_path + 'train_y.npy')
+            os.remove(preprocessed_path + 'val_x.npy')
+            os.remove(preprocessed_path + 'val_y.npy')
+            os.remove(preprocessed_path + 'test_x.npy')
+            os.remove(preprocessed_path + 'test_y.npy')
 
         raw_path = 'dataset/kaggle/chest_xray/'
 
@@ -116,6 +117,20 @@ def get_data(img_dims, labels,process):
     test_y = np.load(preprocessed_path + 'test_y.npy')
 
     return (train_x, train_y), (val_x, val_y), (test_x, test_y)
+
+def reset_Models():
+    folder = 'saved_models/'
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+
 
 
 def count_color_modes(images):
