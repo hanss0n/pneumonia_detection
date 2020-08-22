@@ -1,3 +1,4 @@
+import time
 import logging
 import os
 #suppressing the huge logs
@@ -35,7 +36,7 @@ def setup_model(aug1,aug2):
 
     # Define parameters for our network
     batch_size = 128
-    epochs = 5
+    epochs = 200
     img_height = 150
     img_width = 150
     img_dims = (img_height, img_width)
@@ -58,8 +59,9 @@ def setup_model(aug1,aug2):
 
     losses = []
     scores = []
+    hist = []
 
-    for i in range(10):
+    for i in range(15):
 
         gen = ImageDataGenerator()
         # gen = ImageDataGenerator(
@@ -127,7 +129,8 @@ def setup_model(aug1,aug2):
             epochs=epochs,
             validation_data=val_gen,
             validation_steps=total_val // batch_size,
-            shuffle=False, callbacks=[reduce_lr, checkpoint]
+            shuffle=False, 
+            callbacks=[reduce_lr, checkpoint]
 
         )
         model.load_weights(path)  # load weights for best epoch
@@ -138,57 +141,111 @@ def setup_model(aug1,aug2):
 
         saveAugPlot = aug1+aug2+' '+str(i)
         plot_model(history,saveAugPlot)
-        losses.append(test_loss)
+        losses.append(test_loss)    
         scores.append(test_score)
+        hist.append(history)
+
+        print('\nFinished iteration #{} of {} and {}\n'.format(i+1,aug1,aug2))
     
-    return losses,scores
+    plot_model(hist,(aug1+aug2+' Average'))
+    return losses,scores 
+
+
+def plot_model(results,saveAugPlot):
+    if 'Average' not in saveAugPlot:
+
+        acc = results.history['accuracy']
+        val_acc = results.history['val_accuracy']
+
+        loss = results.history['loss']
+        val_loss = results.history['val_loss']
+
+        epochs_range = range(len(acc))
+
+        plt.figure(figsize=(8, 8))
+        plt.subplot(1, 2, 1)
+        plt.plot(epochs_range, acc, label='Training Accuracy')
+        plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+        plt.legend(loc='lower right')
+        plt.title('Training and Validation Accuracy')
+
+        plt.subplot(1, 2, 2)
+        plt.plot(epochs_range, loss, label='Training Loss')
+        plt.plot(epochs_range, val_loss, label='Validation Loss')
+        plt.legend(loc='upper right')
+        plt.title('Training and Validation Loss')
+        plt.savefig(fname=('plots/'+saveAugPlot))
+
+    else:
+        acc, val_acc, loss, val_loss = [], [], [], []
+        for hist in results:
+            acc.append(hist.history['accuracy'])
+            val_acc.append(hist.history['val_accuracy'])
+
+            loss.append(hist.history['loss'])
+            val_loss.append(hist.history['val_loss'])
+
+
+        avgAcc = np.average(acc,axis=0)
+        avgValAcc = np.average(val_acc,axis=0)
+        avgLoss = np.average(loss,axis=0)
+        avgValLoss = np.average(val_loss,axis=0)
+        
+        epochs_range = range(len(avgAcc))
+
+        plt.figure(figsize=(8, 8))
+        plt.subplot(1, 2, 1)
+        plt.plot(epochs_range, avgAcc, label='Training Accuracy')
+        plt.plot(epochs_range, avgValAcc, label='Validation Accuracy')
+        plt.legend(loc='lower right')
+        plt.title('Training and Validation Accuracy')
+
+        plt.subplot(1, 2, 2)
+        plt.plot(epochs_range, avgLoss, label='Training Loss')
+        plt.plot(epochs_range, avgValLoss, label='Validation Loss')
+        plt.legend(loc='upper right')
+        plt.title('Training and Validation Loss')
+        plt.savefig(fname=('plots/'+saveAugPlot))
+
+
+    plt.close('all')
+
 
 def runAll():
     augmentations = ['Cutmix','Mixup','Cutout']
     resLosses = []
     resScores = []
     with open('results.txt','w') as file:
-        for i in range(len(augmentations)):
-            for j in range(len(augmentations)):
-                tmp = setup_model(augmentations[i],augmentations[j])
-                resLosses.append(tmp[0])
-                resScores.append(tmp[1])
-                file.write('\nAugmentations: {} {}'.format(augmentations[i],augmentations[j]))
-                file.write('\nLosses: {}'.format(tmp[0]))
-                file.write('\nScores: {}'.format(tmp[1]))
-                file.write('\nAverage Loss: {}'.format(np.average(tmp[0])))
-                file.write('\nAverage Score: {}'.format(np.average(tmp[1])))
-        
+        # for i in range(len(augmentations)):
+        #     for j in range(len(augmentations)):
+        #         tmp = setup_model(augmentations[i],augmentations[j])
+        #         resLosses.append(tmp[0])
+        #         resScores.append(tmp[1])
+        #         file.write('\nAugmentations: {} {}'.format(augmentations[i],augmentations[j]))
+        #         file.write('\nLosses: {}'.format(tmp[0]))
+        #         file.write('\nScores: {}'.format(tmp[1]))
+        #         file.write('\nAverage Loss: {}'.format(np.average(tmp[0])))
+        #         file.write('\nAverage Score: {}'.format(np.average(tmp[1])))
+
+        tmp = setup_model(augmentations[1],augmentations[2])
+        resLosses.append(tmp[0])
+        resScores.append(tmp[1])
+        file.write('\nAugmentations: {} {}'.format(augmentations[1],augmentations[2]))
+        file.write('\nLosses: {}'.format(tmp[0]))
+        file.write('\nScores: {}'.format(tmp[1]))
+        file.write('\nAverage Loss: {}'.format(np.average(tmp[0])))
+        file.write('\nAverage Score: {}'.format(np.average(tmp[1])))
+
+
     #print(resLosses)
     #print(resScores)
-    
-
-
-
-
-def plot_model(results,saveAugPlot):
-    acc = results.history['accuracy']
-    val_acc = results.history['val_accuracy']
-
-    loss = results.history['loss']
-    val_loss = results.history['val_loss']
-
-    epochs_range = range(len(acc))
-
-    plt.figure(figsize=(8, 8))
-    plt.subplot(1, 2, 1)
-    plt.plot(epochs_range, acc, label='Training Accuracy')
-    plt.plot(epochs_range, val_acc, label='Validation Accuracy')
-    plt.legend(loc='lower right')
-    plt.title('Training and Validation Accuracy')
-
-    plt.subplot(1, 2, 2)
-    plt.plot(epochs_range, loss, label='Training Loss')
-    plt.plot(epochs_range, val_loss, label='Validation Loss')
-    plt.legend(loc='upper right')
-    plt.title('Training and Validation Loss')
-    plt.savefig(fname=('plots/'+saveAugPlot))
-
+   
 
 if __name__ == '__main__':
+    startTime = time.time()
     runAll()
+    endTime = time.time()
+    hours, rem = divmod(endTime-startTime, 3600)
+    minutes, seconds = divmod(rem, 60)
+    print('Elapsed time: {:0>2}:{:0>2}:{:0>2}'.format(int(hours),int(minutes),int(seconds)))
+
