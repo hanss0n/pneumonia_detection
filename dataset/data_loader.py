@@ -19,24 +19,24 @@ def load_kaggle():
         print('The Kaggle dataset is already downloaded')
 
 def re_partition_kaggle():
-    num_to_move = 42
-    random.seed(1337)
-    test_dir = os.path.join('kaggle', 'chest_xray', 'test')
+    #num_to_move = 3418
+    #random.seed(1337)
+    test_dir = os.path.join('kaggle', 'chest_xray', 'ALL')
     val_dir = os.path.join('kaggle', 'chest_xray', 'val')
 
     # Move images for both classes
-    test_2_val('NORMAL', test_dir, val_dir, num_to_move)
-    test_2_val('PNEUMONIA', test_dir, val_dir, num_to_move)
+    test_2_val('NORMAL', test_dir, val_dir, 158)
+    test_2_val('PNEUMONIA', test_dir, val_dir, 428)
 
 
 def test_2_val(classification, train, val, num_to_move):
-    if len(os.listdir(os.path.join(val, classification))) == 8:
-        images = os.listdir(os.path.join(train, classification))
-        idx = random.sample(range(0, len(images)), num_to_move)
-        images_to_move = [images[i] for i in idx]
-        move_images(os.path.join(train, classification), os.path.join(val, classification), images_to_move)
-    else:
-        print('The validation set already has ', len(os.listdir(os.path.join(val, classification))), ' entries')
+    #if len(os.listdir(os.path.join(val, classification))) == 8:
+    images = os.listdir(os.path.join(train, classification))
+    idx = random.sample(range(0, len(images)), num_to_move)
+    images_to_move = [images[i] for i in idx]
+    move_images(os.path.join(train, classification), os.path.join(val, classification), images_to_move)
+    #else:
+        #print('The validation set already has ', len(os.listdir(os.path.join(val, classification))), ' entries')
 
 
 def move_images(src, dest, images):
@@ -153,5 +153,5 @@ def count_color_modes(images):
 
 
 if __name__ == '__main__':
-    load_kaggle()
+    #load_kaggle()
     re_partition_kaggle()
