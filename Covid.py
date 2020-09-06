@@ -36,21 +36,19 @@ def setup_model(aug1,aug2):
 
     # Define parameters for our network
     batch_size = 128
-    epochs = 200
+    epochs = 50
     img_height = 150
     img_width = 150
     img_dims = (img_height, img_width)
-    reduce_lr = ReduceLROnPlateau(monitor='accuracy', factor=0.2,
-                                  patience=5, min_lr=0.00001, cooldown=3, verbose=1)
     alpha = 1
     num_holes = 5
 
     reset_Models()
     process_data = False
-    (train_x, train_y), (val_x, val_y), (test_x, test_y) = get_data(img_dims, labels,process_data)#(val_x, val_y), (test_x, test_y) = get_data(img_dims, labels,process_data)
-    total_train = len(train_x)
-    total_val = len(val_x)
-    total_test = len(test_x)
+    (train_x0, train_y0), (val_x0, val_y0), (test_x0, test_y0) = get_data(img_dims, labels,process_data)#(val_x, val_y), (test_x, test_y) = get_data(img_dims, labels,process_data)
+    total_train = len(train_x0)
+    total_val = len(val_x0)
+    total_test = len(test_x0)
     total = total_train+total_val+total_test
     print('\n#images for training:{} ({}%)'.format(total_train, round(total_train/total*100,1)),
             ' validation:{} ({}%)'.format(total_val, round(total_val/total*100,1)),
@@ -62,35 +60,52 @@ def setup_model(aug1,aug2):
     hist = []
 
     for i in range(15):
+        train_x = train_x0.copy()
+        train_y = train_y0.copy()
+        val_x = val_x0.copy()
+        val_y = val_y0.copy()
+        test_x = test_x0.copy()
+        test_y = test_y0.copy()
 
-        gen = ImageDataGenerator()
-        # gen = ImageDataGenerator(
-        #     rotation_range=5,
-        #     zoom_range=0.2,
-        #     width_shift_range=0.1,
-        #     height_shift_range=0.1,
-        #     horizontal_flip=True
-        # )
 
-        if aug1 == 'Mixup':
+
+        if aug1 == 'None':
+            gen = ImageDataGenerator()
+        elif aug1 == 'Basic':
+            gen = ImageDataGenerator(
+                rotation_range=5,
+                zoom_range=0.2,
+                width_shift_range=0.1,
+                height_shift_range=0.1,
+                horizontal_flip=True
+            )
+        elif aug1 == 'Mixup':
             train_x, train_y = mixup(train_x, train_y, alpha, show_sample=False)
+            gen = ImageDataGenerator()
         elif aug1 == 'Cutmix':
             train_x, train_y = cutmix(train_x, train_y, alpha, show_sample=False)
+            gen = ImageDataGenerator()
         elif aug1 == 'Cutout':
             train_x, train_y = cutout(train_x, train_y, n_holes=num_holes, show_sample=False)
+            gen = ImageDataGenerator()
+            
 
-        if aug1 != aug2:
-            if aug2 == 'Mixup':
-                train_x, train_y = mixup(train_x, train_y, alpha, show_sample=False)
-            elif aug2 == 'Cutmix':
-                train_x, train_y = cutmix(train_x, train_y, alpha, show_sample=False)
-            elif aug2 == 'Cutout':
-                train_x, train_y = cutout(train_x, train_y, n_holes=num_holes, show_sample=False)
+        # if aug1 != aug2:
+        #     if aug2 == 'Mixup':
+        #         train_x, train_y = mixup(train_x, train_y, alpha, show_sample=False)
+        #     elif aug2 == 'Cutmix':
+        #         train_x, train_y = cutmix(train_x, train_y, alpha, show_sample=False)
+        #     elif aug2 == 'Cutout':
+        #         train_x, train_y = cutout(train_x, train_y, n_holes=num_holes, show_sample=False)
 
         #only need to fit the generator if featurewise_center or featurewise_std_normalization or zca_whitening are set to True
         #gen.fit(train_x, seed=seed)
 
-        train_gen = gen.flow(train_x, train_y, batch_size)#, seed=seed)
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,patience=5, min_lr=0.00001, cooldown=3, verbose=1)
+
+
+
+        train_gen = gen.flow(train_x, train_y, batch_size,shuffle=True)#, seed=seed)
         val_gen = gen.flow(val_x, val_y, batch_size)#, seed=seed)
 
         #neural network setup
@@ -120,8 +135,7 @@ def setup_model(aug1,aug2):
                     loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                     metrics=['accuracy'])
 
-        checkpoint = ModelCheckpoint(filepath=path, save_weights_only=True, monitor='val_accuracy', mode='max',
-                                        save_best_only=True, verbose=1)
+        checkpoint = ModelCheckpoint(filepath=path, save_weights_only=True, monitor='val_accuracy', mode='max', save_best_only=True, verbose=1)
 
         history = model.fit(
             train_gen,
@@ -212,7 +226,7 @@ def plot_model(results,saveAugPlot):
 
 
 def runAll():
-    augmentations = ['Cutmix','Mixup','Cutout']
+    augmentations = ['None','Basic','Cutmix','Mixup','Cutout']
     resLosses = []
     resScores = []
     with open('results.txt','w') as file:
@@ -227,10 +241,10 @@ def runAll():
         #         file.write('\nAverage Loss: {}'.format(np.average(tmp[0])))
         #         file.write('\nAverage Score: {}'.format(np.average(tmp[1])))
 
-        tmp = setup_model(augmentations[1],augmentations[2])
+        tmp = setup_model(augmentations[4],augmentations[4])
         resLosses.append(tmp[0])
         resScores.append(tmp[1])
-        file.write('\nAugmentations: {} {}'.format(augmentations[1],augmentations[2]))
+        file.write('\nAugmentations: {} {}'.format(augmentations[4],augmentations[4]))
         file.write('\nLosses: {}'.format(tmp[0]))
         file.write('\nScores: {}'.format(tmp[1]))
         file.write('\nAverage Loss: {}'.format(np.average(tmp[0])))
